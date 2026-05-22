@@ -95,6 +95,29 @@ Raw signal / request
 → DRP: record the committed decision
 ```
 
+## Examples
+
+DI is demonstrated through practical feasibility checks:
+
+- [`examples/ai-agent-support.md`](examples/ai-agent-support.md) — maps support-agent capabilities, account-permission boundaries, blocked actions, and DRP readiness.
+- [`examples/startup-plan.md`](examples/startup-plan.md) — maps startup revenue ambition into market, capital, founder-capacity, and validation constraints.
+- [`examples/qa-automation.md`](examples/qa-automation.md) — maps QA automation feasibility across technical, operational, knowledge, and risk boundaries.
+
+Each example follows the same pattern:
+
+```text
+Request
+→ DIF Analysis / inferred intent
+→ DI Feasibility Assessment
+→ Boundary Assessment
+→ Limitations
+→ Feasible Paths
+→ Blocked Actions
+→ Critical Unknowns
+→ Recommendation
+→ DRP Readiness
+```
+
 ## Status
 
 Draft / seed repository.
