@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.org/di/limitation.schema.json",
+  "title": "DI Limitation Record",
+  "description": "A minimal limitation record for Doability Intelligence assessments.",
+  "type": "object",
+  "required": [
+    "limitation_id",
+    "type",
+    "description",
+    "severity"
+  ],
+  "properties": {
+    "limitation_id": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "missing_context",
+        "missing_permission",
+        "tool_limitation",
+        "knowledge_limitation",
+        "safety_limitation",
+        "compliance_limitation",
+        "reversibility_limitation",
+        "human_boundary",
+        "unknown"
+      ]
+    },
+    "description": {
+      "type": "string"
+    },
+    "severity": {
+      "type": "string",
+      "enum": [
+        "informational",
+        "constraining",
+        "blocking",
+        "unknown"
+      ]
+    },
+    "required_resolution": {
+      "type": "string"
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    }
+  },
+  "additionalProperties": false
+}
