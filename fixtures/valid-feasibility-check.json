@@ -1,0 +1,51 @@
+{
+  "check_id": "check-ai-agent-support-001",
+  "request": "Help the user resolve an account issue and send the result to the support system.",
+  "inferred_intent": "Prepare a safe, structured support resolution path without taking unauthorized account actions or exposing private data.",
+  "capabilities": [
+    "Summarize user-provided issue details.",
+    "Identify likely support categories.",
+    "Draft a support note for human review."
+  ],
+  "limitations": [
+    "User identity is not verified.",
+    "Support-system write access is unknown.",
+    "Current support policy details may be unavailable."
+  ],
+  "constraints": [
+    "Privacy boundary.",
+    "Permission boundary.",
+    "Human approval boundary."
+  ],
+  "feasible_actions": [
+    {
+      "action": "Prepare a structured support note for human review.",
+      "status": "allowed_with_constraints",
+      "conditions": [
+        "Use only account-safe details.",
+        "Do not claim resolution without confirmation."
+      ]
+    },
+    {
+      "action": "Ask for missing non-sensitive issue details.",
+      "status": "allowed",
+      "conditions": []
+    }
+  ],
+  "blocked_actions": [
+    {
+      "action": "Change account settings directly.",
+      "reason": "Account authority and identity are not verified."
+    },
+    {
+      "action": "Send private user data to an unapproved support tool.",
+      "reason": "The data-transfer boundary and tool approval are unknown."
+    }
+  ],
+  "unknowns": [
+    "Whether the user is verified.",
+    "Whether the support tool is approved.",
+    "Whether the issue affects billing, security, or access."
+  ],
+  "recommended_next_step": "Prepare a structured support note and ask a human operator to approve or complete the action."
+}
