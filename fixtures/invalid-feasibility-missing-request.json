@@ -1,0 +1,32 @@
+{
+  "check_id": "check-invalid-missing-request-001",
+  "inferred_intent": "Prepare a feasibility check, but omit the required request field to demonstrate schema failure.",
+  "capabilities": [
+    "Draft a structured support note."
+  ],
+  "limitations": [
+    "User identity is not verified."
+  ],
+  "constraints": [
+    "Permission boundary."
+  ],
+  "feasible_actions": [
+    {
+      "action": "Prepare a local draft only.",
+      "status": "allowed_with_constraints",
+      "conditions": [
+        "Do not submit externally."
+      ]
+    }
+  ],
+  "blocked_actions": [
+    {
+      "action": "Submit the support action directly.",
+      "reason": "Request field is missing and authority is not verified."
+    }
+  ],
+  "unknowns": [
+    "Original request is missing."
+  ],
+  "recommended_next_step": "Reject this fixture during schema validation because the required request field is absent."
+}
