@@ -1,0 +1,15 @@
+{
+  "capability_id": "cap-support-note-drafting",
+  "name": "Support note drafting",
+  "description": "The system can summarize a user-provided account issue and prepare a structured support note for human review.",
+  "status": "available_with_constraints",
+  "constraints": [
+    "Do not submit the note externally without approval.",
+    "Do not include secrets or unnecessary personal data.",
+    "Do not claim that the account issue is resolved without support-system confirmation."
+  ],
+  "evidence": [
+    "examples/ai-agent-support.md",
+    "docs/capability-boundaries.md"
+  ]
+}
