@@ -1,0 +1,11 @@
+{
+  "limitation_id": "lim-user-identity-not-verified",
+  "type": "missing_permission",
+  "description": "The system cannot perform account-specific support actions because the user's identity and account authority have not been verified.",
+  "severity": "blocking",
+  "required_resolution": "Use an approved identity verification or human support review flow before account-specific actions are attempted.",
+  "evidence": [
+    "examples/ai-agent-support.md",
+    "docs/limitation-model.md"
+  ]
+}
