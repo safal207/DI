@@ -109,6 +109,13 @@ DI/
 │   ├── capability.schema.json
 │   ├── limitation.schema.json
 │   └── feasibility-check.schema.json
+├── fixtures/
+│   ├── valid-capability.json
+│   ├── valid-limitation.json
+│   ├── valid-feasibility-check.json
+│   └── invalid-feasibility-missing-request.json
+├── scripts/
+│   └── validate-fixtures.py
 └── examples/
     ├── ai-agent-support.md
     ├── startup-plan.md
@@ -127,6 +134,25 @@ DI/
 - [`schemas/capability.schema.json`](schemas/capability.schema.json) — minimal capability record schema.
 - [`schemas/limitation.schema.json`](schemas/limitation.schema.json) — minimal limitation record schema.
 - [`schemas/feasibility-check.schema.json`](schemas/feasibility-check.schema.json) — minimal feasibility-check schema.
+
+## Fixtures
+
+- [`fixtures/valid-capability.json`](fixtures/valid-capability.json) — expected to pass capability schema validation.
+- [`fixtures/valid-limitation.json`](fixtures/valid-limitation.json) — expected to pass limitation schema validation.
+- [`fixtures/valid-feasibility-check.json`](fixtures/valid-feasibility-check.json) — expected to pass feasibility-check schema validation.
+- [`fixtures/invalid-feasibility-missing-request.json`](fixtures/invalid-feasibility-missing-request.json) — expected to fail feasibility-check schema validation.
+
+See [`MANIFEST.md`](MANIFEST.md) for the fixture map.
+
+## Validation
+
+Run:
+
+```bash
+python scripts/validate-fixtures.py
+```
+
+The validator is intentionally minimal and dependency-free. It checks the current seed fixtures against the current seed schemas. It is not a full JSON Schema 2020-12 implementation.
 
 ## Examples
 
