@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.org/di/capability.schema.json",
+  "title": "DI Capability Record",
+  "description": "A minimal capability record for Doability Intelligence assessments.",
+  "type": "object",
+  "required": [
+    "capability_id",
+    "name",
+    "description",
+    "status"
+  ],
+  "properties": {
+    "capability_id": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "available",
+        "available_with_constraints",
+        "unavailable",
+        "unknown"
+      ]
+    },
+    "constraints": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    }
+  },
+  "additionalProperties": false
+}
