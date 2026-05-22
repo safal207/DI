@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.org/di/feasibility-check.schema.json",
+  "title": "DI Feasibility Check",
+  "description": "A minimal feasibility check for Doability Intelligence assessments.",
+  "type": "object",
+  "required": [
+    "check_id",
+    "request",
+    "capabilities",
+    "limitations",
+    "constraints",
+    "feasible_actions",
+    "blocked_actions",
+    "recommended_next_step"
+  ],
+  "properties": {
+    "check_id": {
+      "type": "string"
+    },
+    "request": {
+      "type": "string"
+    },
+    "inferred_intent": {
+      "type": "string"
+    },
+    "capabilities": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "limitations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "constraints": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "feasible_actions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["action", "status"],
+        "properties": {
+          "action": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "allowed",
+              "allowed_with_constraints",
+              "requires_human_review"
+            ]
+          },
+          "conditions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "default": []
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "blocked_actions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["action", "reason"],
+        "properties": {
+          "action": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "unknowns": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "recommended_next_step": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}
