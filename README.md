@@ -95,6 +95,39 @@ Raw signal / request
 → DRP: record the committed decision
 ```
 
+## Repository Structure
+
+```text
+DI/
+├── README.md
+├── docs/
+│   ├── concept.md
+│   ├── capability-boundaries.md
+│   ├── limitation-model.md
+│   └── relation-to-dif-and-drp.md
+├── schemas/
+│   ├── capability.schema.json
+│   ├── limitation.schema.json
+│   └── feasibility-check.schema.json
+└── examples/
+    ├── ai-agent-support.md
+    ├── startup-plan.md
+    └── qa-automation.md
+```
+
+## Documentation
+
+- [`docs/concept.md`](docs/concept.md) — defines DI as the discipline of understanding what can and cannot be done before commitment.
+- [`docs/capability-boundaries.md`](docs/capability-boundaries.md) — explains why technical capability is not permission.
+- [`docs/limitation-model.md`](docs/limitation-model.md) — defines explicit limitation categories and severity levels.
+- [`docs/relation-to-dif-and-drp.md`](docs/relation-to-dif-and-drp.md) — positions DI between DIF and DRP.
+
+## Schemas
+
+- [`schemas/capability.schema.json`](schemas/capability.schema.json) — minimal capability record schema.
+- [`schemas/limitation.schema.json`](schemas/limitation.schema.json) — minimal limitation record schema.
+- [`schemas/feasibility-check.schema.json`](schemas/feasibility-check.schema.json) — minimal feasibility-check schema.
+
 ## Examples
 
 DI is demonstrated through practical feasibility checks:
