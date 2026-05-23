@@ -101,6 +101,7 @@ Raw signal / request
 DI/
 ├── README.md
 ├── docs/
+│   ├── rfc-0001.md
 │   ├── concept.md
 │   ├── capability-boundaries.md
 │   ├── limitation-model.md
@@ -127,6 +128,7 @@ DI/
 
 ## Documentation
 
+- [`docs/rfc-0001.md`](docs/rfc-0001.md) — draft RFC-style specification for DI v0.1.
 - [`docs/concept.md`](docs/concept.md) — defines DI as the discipline of understanding what can and cannot be done before commitment.
 - [`docs/capability-boundaries.md`](docs/capability-boundaries.md) — explains why technical capability is not permission.
 - [`docs/limitation-model.md`](docs/limitation-model.md) — defines explicit limitation categories and severity levels.
