@@ -2,7 +2,7 @@
 
 This manifest lists the seed fixtures used to review the DI schemas.
 
-The fixtures are intentionally small. They are not a full validation suite yet. They provide concrete examples for future schema validation, CLI checks, or CI integration.
+The fixtures are intentionally small. They are not a full validation suite yet. They provide concrete examples for schema validation, CLI checks, and CI integration.
 
 | Fixture | Schema | Expected Result | Purpose |
 |---|---|---|---|
@@ -13,10 +13,16 @@ The fixtures are intentionally small. They are not a full validation suite yet. 
 
 ## Validation
 
-Run:
+Run locally:
 
 ```bash
 python scripts/validate-fixtures.py
+```
+
+CI runs the same validator on every push to `main` and on every pull request via:
+
+```text
+.github/workflows/validate-fixtures.yml
 ```
 
 The validator is intentionally minimal and dependency-free.
@@ -40,12 +46,13 @@ This repository currently defines:
 - JSON Schemas,
 - practical examples,
 - validation fixtures,
-- a minimal fixture validation script.
+- a minimal fixture validation script,
+- minimal CI validation for fixtures.
 
 It does not yet define:
 
-- CI validation,
 - a production validator,
+- release automation,
 - an execution engine,
 - a policy engine,
 - a decision log.
