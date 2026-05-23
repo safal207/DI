@@ -116,6 +116,9 @@ DI/
 │   └── invalid-feasibility-missing-request.json
 ├── scripts/
 │   └── validate-fixtures.py
+├── .github/
+│   └── workflows/
+│       └── validate-fixtures.yml
 └── examples/
     ├── ai-agent-support.md
     ├── startup-plan.md
@@ -146,11 +149,13 @@ See [`MANIFEST.md`](MANIFEST.md) for the fixture map.
 
 ## Validation
 
-Run:
+Run locally:
 
 ```bash
 python scripts/validate-fixtures.py
 ```
+
+CI runs the same validator on every push to `main` and on every pull request.
 
 The validator is intentionally minimal and dependency-free. It checks the current seed fixtures against the current seed schemas. It is not a full JSON Schema 2020-12 implementation.
 
