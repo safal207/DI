@@ -100,7 +100,11 @@ DRP → commit decision
 - [DI / Doability Intelligence](https://github.com/safal207/DI) — maps capabilities, limitations, constraints, and feasible action paths before commitment.
 - [DRP / Decision Record Protocol](https://github.com/safal207/DRP) — records committed decisions with rationale, responsibility, and causal links.
 
-Each repository should stay narrow. DIF should not become DI. DI should not become DRP. DRP should not become an execution engine.
+Adjacent protocol:
+
+- [TIP / Transition Intelligence Protocol](https://github.com/safal207/transition-intelligence-protocol) — studies transitions between states, including readiness, ambiguity, and safe movement from one state to another.
+
+Each repository should stay narrow. DIF should not become DI. DI should not become DRP. DRP should not become an execution engine. TIP should not replace the decision stack; it should describe transition dynamics around it.
 
 ## Minimal Flow
 
