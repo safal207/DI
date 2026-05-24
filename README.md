@@ -86,6 +86,22 @@ DI  → clarify limits
 DRP → commit decision
 ```
 
+## Related Projects
+
+DI is part of a small decision-integrity stack:
+
+```text
+DIF → clarify intent
+DI  → clarify limits
+DRP → commit decision
+```
+
+- [DIF / DeepIntent Funnel](https://github.com/safal207/DIF) — clarifies raw human signals into structured intent.
+- [DI / Doability Intelligence](https://github.com/safal207/DI) — maps capabilities, limitations, constraints, and feasible action paths before commitment.
+- [DRP / Decision Record Protocol](https://github.com/safal207/DRP) — records committed decisions with rationale, responsibility, and causal links.
+
+Each repository should stay narrow. DIF should not become DI. DI should not become DRP. DRP should not become an execution engine.
+
 ## Minimal Flow
 
 ```text
