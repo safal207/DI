@@ -100,6 +100,8 @@ Raw signal / request
 ```text
 DI/
 ├── README.md
+├── CONTRIBUTING.md
+├── ROADMAP.md
 ├── docs/
 │   ├── rfc-0001.md
 │   ├── concept.md
@@ -183,6 +185,24 @@ Request
 → Recommendation
 → DRP Readiness
 ```
+
+## Contributing
+
+DI is open to focused contributions that keep the repository narrow, protocol-like, and reviewable.
+
+Good first contribution areas:
+
+- improve examples,
+- add realistic fixtures,
+- clarify terminology,
+- improve validator messages,
+- review RFC-0001 open questions.
+
+Start with:
+
+- [`CONTRIBUTING.md`](CONTRIBUTING.md) — contribution guide and PR expectations.
+- [`ROADMAP.md`](ROADMAP.md) — current development phases and entry points.
+- issues labeled `good first issue` or `help wanted`.
 
 ## Status
 
