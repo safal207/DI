@@ -78,6 +78,16 @@
         "execution_status": "observed",
         "evidence_references": ["evidence://receipt-transport/retry-attempt-id", "evidence://receipt-transport/http-200"]
       },
+      "state_effect_receipt": {
+        "effect_version": "0.1",
+        "effect_id": "effect.recovery.receipt.004",
+        "execution_receipt_id": "receipt.recovery.receipt.004",
+        "recovery_cycle_id": "dti.receipt-recovery.cycle.004",
+        "expected_target_state": "RECEIPT_DELIVERED",
+        "observed_state": "RECEIPT_DELIVERED",
+        "effect_status": "observed",
+        "evidence_references": ["evidence://receipt/provider-message-id", "evidence://receipt/status/delivered"]
+      },
       "envelope": {
         "envelope_version": "0.1",
         "envelope_id": "dti.receipt-recovery.cycle.004",
