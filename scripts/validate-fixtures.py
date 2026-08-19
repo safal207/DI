@@ -6,6 +6,8 @@ this repository's seed schemas. It uses Python standard library only.
 
 For the cross-stack Decision & Transition Integrity Envelope, the script also
 checks reference-continuity invariants that JSON Schema alone cannot express.
+For cycle chains, it additionally checks that an observed next state from one
+review becomes the exact starting state of the next cycle.
 """
 
 from __future__ import annotations
@@ -16,6 +18,7 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 ENVELOPE_SCHEMA = "schemas/decision-transition-envelope.schema.json"
+CHAIN_SCHEMA = "schemas/decision-transition-cycle-chain.schema.json"
 
 CASES = [
     (
@@ -56,6 +59,16 @@ CASES = [
     (
         "fixtures/invalid-decision-transition-envelope-reviewed-without-evidence.json",
         ENVELOPE_SCHEMA,
+        False,
+    ),
+    (
+        "fixtures/valid-decision-transition-cycle-chain-two-cycles.json",
+        CHAIN_SCHEMA,
+        True,
+    ),
+    (
+        "fixtures/invalid-decision-transition-cycle-chain-state-mismatch.json",
+        CHAIN_SCHEMA,
         False,
     ),
 ]
@@ -125,11 +138,11 @@ def validate(instance: Any, schema: dict[str, Any], path: str = "$") -> list[str
     return errors
 
 
-def validate_envelope_semantics(instance: Any) -> list[str]:
+def validate_envelope_semantics(instance: Any, path: str = "$") -> list[str]:
     """Validate cross-stack handoff continuity beyond JSON shape."""
 
     if not isinstance(instance, dict):
-        return ["$: envelope must be an object"]
+        return [f"{path}: envelope must be an object"]
 
     errors: list[str] = []
 
@@ -143,26 +156,26 @@ def validate_envelope_semantics(instance: Any) -> list[str]:
         return errors
 
     if dif.get("human_confirmed") is not True:
-        errors.append("$.dif.human_confirmed: cross-stack intent must be human-confirmed")
+        errors.append(f"{path}.dif.human_confirmed: cross-stack intent must be human-confirmed")
 
     if di.get("intent_id") != dif.get("intent_id"):
         errors.append(
-            "$.di.intent_id: must exactly match $.dif.intent_id to preserve DIF → DI identity"
+            f"{path}.di.intent_id: must exactly match {path}.dif.intent_id to preserve DIF → DI identity"
         )
 
     if drp.get("feasibility_id") != di.get("feasibility_id"):
         errors.append(
-            "$.drp.feasibility_id: must exactly match $.di.feasibility_id to preserve DI → DRP identity"
+            f"{path}.drp.feasibility_id: must exactly match {path}.di.feasibility_id to preserve DI → DRP identity"
         )
 
     if tip.get("decision_record_id") != drp.get("record_id"):
         errors.append(
-            "$.tip.decision_record_id: must exactly match $.drp.record_id to preserve DRP → TIP identity"
+            f"{path}.tip.decision_record_id: must exactly match {path}.drp.record_id to preserve DRP → TIP identity"
         )
 
     if review.get("transition_id") != tip.get("transition_id"):
         errors.append(
-            "$.review.transition_id: must exactly match $.tip.transition_id to preserve TIP → Review identity"
+            f"{path}.review.transition_id: must exactly match {path}.tip.transition_id to preserve TIP → Review identity"
         )
 
     review_status = review.get("status")
@@ -174,21 +187,101 @@ def validate_envelope_semantics(instance: Any) -> list[str]:
 
         if tip_status != "reviewed":
             errors.append(
-                "$.tip.status: must be 'reviewed' when $.review.status is 'reviewed'"
+                f"{path}.tip.status: must be 'reviewed' when {path}.review.status is 'reviewed'"
             )
         if not isinstance(evidence, list) or not evidence:
             errors.append(
-                "$.review.evidence_references: reviewed envelope requires at least one evidence reference"
+                f"{path}.review.evidence_references: reviewed envelope requires at least one evidence reference"
             )
         if not isinstance(next_state, str) or not next_state or next_state == "UNOBSERVED":
             errors.append(
-                "$.review.next_state: reviewed envelope requires a concrete observed next state"
+                f"{path}.review.next_state: reviewed envelope requires a concrete observed next state"
             )
 
     if review_status == "pending" and tip_status != "committed":
         errors.append(
-            "$.tip.status: pending review requires the transition to remain 'committed'"
+            f"{path}.tip.status: pending review requires the transition to remain 'committed'"
         )
+
+    return errors
+
+
+def validate_cycle_chain_semantics(instance: Any) -> list[str]:
+    """Validate end-to-end continuity across two or more reviewed cycles."""
+
+    if not isinstance(instance, dict):
+        return ["$: cycle chain must be an object"]
+
+    cycles = instance.get("cycles")
+    if not isinstance(cycles, list):
+        return []
+
+    errors: list[str] = []
+    if len(cycles) < 2:
+        errors.append("$.cycles: cycle-chain fixture requires at least two cycles")
+        return errors
+
+    envelope_schema = load_json(ROOT / ENVELOPE_SCHEMA)
+
+    previous_cycle: dict[str, Any] | None = None
+    for index, cycle in enumerate(cycles):
+        path = f"$.cycles[{index}]"
+        if not isinstance(cycle, dict):
+            continue
+
+        envelope = cycle.get("envelope")
+        if not isinstance(envelope, dict):
+            continue
+
+        errors.extend(validate(envelope, envelope_schema, f"{path}.envelope"))
+        errors.extend(validate_envelope_semantics(envelope, f"{path}.envelope"))
+
+        cycle_id = cycle.get("cycle_id")
+        input_state = cycle.get("input_state")
+        previous_cycle_id = cycle.get("previous_cycle_id")
+        tip = envelope.get("tip")
+        review = envelope.get("review")
+
+        if cycle_id != envelope.get("envelope_id"):
+            errors.append(
+                f"{path}.cycle_id: must exactly match {path}.envelope.envelope_id"
+            )
+
+        if isinstance(tip, dict) and input_state != tip.get("starting_state"):
+            errors.append(
+                f"{path}.input_state: must exactly match {path}.envelope.tip.starting_state"
+            )
+
+        if index == 0:
+            if previous_cycle_id != "NONE":
+                errors.append(f"{path}.previous_cycle_id: first cycle must use 'NONE'")
+        elif previous_cycle is not None:
+            expected_previous_id = previous_cycle.get("cycle_id")
+            if previous_cycle_id != expected_previous_id:
+                errors.append(
+                    f"{path}.previous_cycle_id: must exactly match previous cycle_id {expected_previous_id!r}"
+                )
+
+            previous_envelope = previous_cycle.get("envelope")
+            if isinstance(previous_envelope, dict):
+                previous_review = previous_envelope.get("review")
+                if isinstance(previous_review, dict):
+                    previous_next_state = previous_review.get("next_state")
+                    if previous_review.get("status") != "reviewed":
+                        errors.append(
+                            f"{path}: previous cycle must be reviewed before its next state can seed a new cycle"
+                        )
+                    if input_state != previous_next_state:
+                        errors.append(
+                            f"{path}.input_state: must exactly equal previous review.next_state {previous_next_state!r}"
+                        )
+
+        if isinstance(review, dict) and review.get("status") != "reviewed":
+            errors.append(
+                f"{path}.envelope.review.status: chained cycle must be reviewed before the chain is considered closed"
+            )
+
+        previous_cycle = cycle
 
     return errors
 
@@ -203,6 +296,8 @@ def run_case(fixture_rel: str, schema_rel: str, expected_pass: bool) -> bool:
         errors = validate(fixture, schema)
         if schema_rel == ENVELOPE_SCHEMA:
             errors.extend(validate_envelope_semantics(fixture))
+        elif schema_rel == CHAIN_SCHEMA:
+            errors.extend(validate_cycle_chain_semantics(fixture))
     except ValueError as exc:
         errors = [str(exc)]
 
