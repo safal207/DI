@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/safal207/DI/schemas/decision-transition-cycle-chain.schema.json",
+  "title": "Decision & Transition Integrity Cycle Chain v0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["chain_version", "chain_id", "cycles"],
+  "properties": {
+    "chain_version": {
+      "type": "string",
+      "enum": ["0.1"]
+    },
+    "chain_id": {
+      "type": "string"
+    },
+    "cycles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["cycle_id", "input_state", "previous_cycle_id", "envelope"],
+        "properties": {
+          "cycle_id": {"type": "string"},
+          "input_state": {"type": "string"},
+          "previous_cycle_id": {"type": "string"},
+          "envelope": {"type": "object"}
+        }
+      }
+    }
+  }
+}
