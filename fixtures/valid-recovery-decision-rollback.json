@@ -1,0 +1,17 @@
+{
+  "matrix_version": "0.1",
+  "decision_id": "recovery.rollback.001",
+  "source_cycle_id": "dti.failure.cycle.003",
+  "failure_state": "PARTIAL_STATE_CONFIRMED",
+  "consequence_level": "medium",
+  "uncertainty_level": "low",
+  "idempotency_verified": false,
+  "operation_reversible": true,
+  "rollback_available": true,
+  "authority_boundary": false,
+  "policy_requires_human": false,
+  "escalation_trigger": "NONE",
+  "selected_action": "ROLLBACK",
+  "rationale": "A verified rollback path exists and restores the prior bounded state.",
+  "evidence_references": ["evidence://rollback/path-verified"]
+}
