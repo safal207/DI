@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
-"""Validate recovery decision -> execution -> observed execution binding.
+"""Validate recovery decision -> execution -> observed state effect binding.
 
 This validator is intentionally narrow. It checks that a recovery decision made
-for a failed cycle is the same recovery mode the next cycle declares and the
-same mode an Execution Receipt says was actually observed. It does not redefine
-DIF, DI, DRP, or TIP semantics.
+for a failed cycle is the same recovery mode the next cycle declares, the same
+mode an Execution Receipt says was actually observed, and that the resulting
+state effect is evidence-backed before recovery is called confirmed.
+
+It does not redefine DIF, DI, DRP, or TIP semantics.
 """
 
 from __future__ import annotations
@@ -21,6 +23,8 @@ CASES = [
     ("fixtures/invalid-recovery-execution-binding-stop-continued.json", False),
     ("fixtures/invalid-execution-receipt-mode-mismatch.json", False),
     ("fixtures/invalid-execution-receipt-without-evidence.json", False),
+    ("fixtures/invalid-state-effect-target-mismatch.json", False),
+    ("fixtures/invalid-state-effect-without-evidence.json", False),
 ]
 
 
@@ -124,14 +128,67 @@ def validate_execution_receipt(
             f"{path}.observed_execution_mode: failed/unknown receipt may only preserve the declared mode or UNKNOWN"
         )
 
+    return errors
+
+
+def validate_state_effect_receipt(
+    effect: dict[str, Any],
+    *,
+    path: str,
+    receipt: dict[str, Any],
+    cycle: dict[str, Any],
+) -> list[str]:
+    """Validate that the observed execution produced the state effect claimed by review."""
+
+    errors: list[str] = []
+
+    if effect.get("effect_version") != "0.1":
+        errors.append(f"{path}.effect_version: expected '0.1'")
+    if not isinstance(effect.get("effect_id"), str) or not effect.get("effect_id"):
+        errors.append(f"{path}.effect_id: required")
+    if effect.get("execution_receipt_id") != receipt.get("receipt_id"):
+        errors.append(f"{path}.execution_receipt_id: must exactly match execution_receipt.receipt_id")
+    if effect.get("recovery_cycle_id") != cycle.get("cycle_id"):
+        errors.append(f"{path}.recovery_cycle_id: must exactly match the current recovery cycle_id")
+
+    status = effect.get("effect_status")
+    observed_state = effect.get("observed_state")
+    evidence = effect.get("evidence_references")
+
+    if status not in {"observed", "failed", "unknown"}:
+        errors.append(f"{path}.effect_status: unsupported status {status!r}")
+    if not isinstance(evidence, list) or not evidence:
+        errors.append(f"{path}.evidence_references: state effect receipt requires at least one evidence reference")
+
     envelope = cycle.get("envelope")
+    target_state = None
+    review = None
     if isinstance(envelope, dict):
-        review = envelope.get("review")
-        if isinstance(review, dict) and review.get("status") == "reviewed":
-            next_state = review.get("next_state")
-            if next_state == "RECOVERY_CONFIRMED" and status != "observed":
+        tip = envelope.get("tip")
+        if isinstance(tip, dict):
+            target_state = tip.get("target_state")
+        candidate_review = envelope.get("review")
+        if isinstance(candidate_review, dict):
+            review = candidate_review
+
+    if effect.get("expected_target_state") != target_state:
+        errors.append(f"{path}.expected_target_state: must exactly match envelope.tip.target_state")
+
+    if status == "observed":
+        if receipt.get("execution_status") != "observed":
+            errors.append(f"{path}.effect_status: observed effect requires an observed Execution Receipt")
+        if observed_state != target_state:
+            errors.append(
+                f"{path}.observed_state: {observed_state!r} must exactly match target state {target_state!r} when effect_status='observed'"
+            )
+
+    if isinstance(review, dict) and review.get("status") == "reviewed":
+        if review.get("next_state") == "RECOVERY_CONFIRMED":
+            if status != "observed":
+                errors.append(f"{path}.effect_status: RECOVERY_CONFIRMED requires an observed state effect")
+            if observed_state != target_state:
                 errors.append(
-                    f"{path}.execution_status: RECOVERY_CONFIRMED requires an observed execution receipt"
+                    f"{path}.observed_state: RECOVERY_CONFIRMED requires the target state to be actually observed"
                 )
 
     return errors
@@ -156,6 +213,7 @@ def validate_binding(instance: Any) -> list[str]:
         execution_mode = cycle.get("execution_mode")
         decision = cycle.get("recovery_decision")
         receipt = cycle.get("execution_receipt")
+        effect = cycle.get("state_effect_receipt")
 
         if recovery_of is None:
             if execution_mode is not None:
@@ -164,6 +222,8 @@ def validate_binding(instance: Any) -> list[str]:
                 errors.append(f"{path}.recovery_decision: only recovery cycles may carry a recovery decision")
             if receipt is not None:
                 errors.append(f"{path}.execution_receipt: only recovery cycles may carry an execution receipt")
+            if effect is not None:
+                errors.append(f"{path}.state_effect_receipt: only recovery cycles may carry a state effect receipt")
             continue
 
         if index == 0:
@@ -230,6 +290,21 @@ def validate_binding(instance: Any) -> list[str]:
                 cycle=cycle,
                 recovery_of=recovery_of,
                 execution_mode=execution_mode,
+            )
+        )
+
+        if not isinstance(effect, dict):
+            errors.append(
+                f"{path}.state_effect_receipt: active recovery cycle requires a State Effect Receipt proving the resulting state"
+            )
+            continue
+
+        errors.extend(
+            validate_state_effect_receipt(
+                effect,
+                path=f"{path}.state_effect_receipt",
+                receipt=receipt,
+                cycle=cycle,
             )
         )
 
