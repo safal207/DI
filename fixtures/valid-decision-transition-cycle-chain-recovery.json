@@ -1,0 +1,179 @@
+{
+  "chain_version": "0.1",
+  "chain_id": "dti.chain.failure-recovery.001",
+  "cycles": [
+    {
+      "cycle_id": "dti.payment-recovery.cycle.001",
+      "input_state": "commit_state_unknown",
+      "previous_cycle_id": "NONE",
+      "envelope": {
+        "envelope_version": "0.1",
+        "envelope_id": "dti.payment-recovery.cycle.001",
+        "dif": {
+          "intent_id": "dif.intent.payment-exactly-once.001",
+          "status": "confirmed",
+          "summary": "Ensure one intended payment reaches a correct terminal outcome without an unintended duplicate financial action.",
+          "human_confirmed": true
+        },
+        "di": {
+          "feasibility_id": "di.feasibility.payment-recovery.001",
+          "intent_id": "dif.intent.payment-exactly-once.001",
+          "status": "conditional",
+          "allowed_paths": ["recover or read the existing transaction state"],
+          "blocked_paths": ["issue a new non-idempotent payment while prior commit state is unknown"],
+          "constraints": ["the original commit state is unknown"]
+        },
+        "drp": {
+          "record_id": "drp.payment-recovery.001",
+          "feasibility_id": "di.feasibility.payment-recovery.001",
+          "decision_summary": "Recover the prior operation state before authorizing another financial commit.",
+          "status": "committed"
+        },
+        "tip": {
+          "transition_id": "tip.payment-recovery.001",
+          "decision_record_id": "drp.payment-recovery.001",
+          "starting_state": "commit_state_unknown",
+          "target_state": "established_transaction_state",
+          "action_summary": "Perform the contract-defined recovery or read operation before any new financial commit.",
+          "status": "reviewed"
+        },
+        "review": {
+          "transition_id": "tip.payment-recovery.001",
+          "status": "reviewed",
+          "evidence_references": ["evidence://transaction-lookup/terminal-success"],
+          "next_state": "SUCCESS_CONFIRMED"
+        }
+      }
+    },
+    {
+      "cycle_id": "dti.fulfillment-check.cycle.002",
+      "input_state": "SUCCESS_CONFIRMED",
+      "previous_cycle_id": "dti.payment-recovery.cycle.001",
+      "envelope": {
+        "envelope_version": "0.1",
+        "envelope_id": "dti.fulfillment-check.cycle.002",
+        "dif": {
+          "intent_id": "dif.intent.post-payment-safe-next-step.002",
+          "status": "confirmed",
+          "summary": "Confirm the safe next step after the already successful payment without paying again.",
+          "human_confirmed": true
+        },
+        "di": {
+          "feasibility_id": "di.feasibility.post-payment.002",
+          "intent_id": "dif.intent.post-payment-safe-next-step.002",
+          "status": "feasible",
+          "allowed_paths": ["verify fulfillment using a read-only operation"],
+          "blocked_paths": ["create another payment for the same purchase"],
+          "constraints": ["the prior payment is already confirmed successful"]
+        },
+        "drp": {
+          "record_id": "drp.post-payment.002",
+          "feasibility_id": "di.feasibility.post-payment.002",
+          "decision_summary": "Preserve the successful payment and use a read-only fulfillment check.",
+          "status": "committed"
+        },
+        "tip": {
+          "transition_id": "tip.fulfillment-check.002",
+          "decision_record_id": "drp.post-payment.002",
+          "starting_state": "SUCCESS_CONFIRMED",
+          "target_state": "FULFILLMENT_STATUS_ESTABLISHED",
+          "action_summary": "Read the fulfillment state without creating another financial action.",
+          "status": "reviewed"
+        },
+        "review": {
+          "transition_id": "tip.fulfillment-check.002",
+          "status": "reviewed",
+          "evidence_references": ["evidence://order-lookup/fulfilled"],
+          "next_state": "FULFILLMENT_CONFIRMED"
+        }
+      }
+    },
+    {
+      "cycle_id": "dti.downstream-action.cycle.003",
+      "input_state": "FULFILLMENT_CONFIRMED",
+      "previous_cycle_id": "dti.fulfillment-check.cycle.002",
+      "envelope": {
+        "envelope_version": "0.1",
+        "envelope_id": "dti.downstream-action.cycle.003",
+        "dif": {
+          "intent_id": "dif.intent.dispatch-receipt.003",
+          "status": "confirmed",
+          "summary": "Send the completion receipt once, without changing the already confirmed payment or fulfillment state.",
+          "human_confirmed": true
+        },
+        "di": {
+          "feasibility_id": "di.feasibility.dispatch-receipt.003",
+          "intent_id": "dif.intent.dispatch-receipt.003",
+          "status": "feasible",
+          "allowed_paths": ["dispatch the receipt through the configured transport"],
+          "blocked_paths": ["change payment state to compensate for a receipt transport failure"],
+          "constraints": ["receipt delivery is downstream of the completed financial action"]
+        },
+        "drp": {
+          "record_id": "drp.dispatch-receipt.003",
+          "feasibility_id": "di.feasibility.dispatch-receipt.003",
+          "decision_summary": "Attempt receipt dispatch without mutating the completed financial state if transport fails.",
+          "status": "committed"
+        },
+        "tip": {
+          "transition_id": "tip.dispatch-receipt.003",
+          "decision_record_id": "drp.dispatch-receipt.003",
+          "starting_state": "FULFILLMENT_CONFIRMED",
+          "target_state": "RECEIPT_DELIVERED",
+          "action_summary": "Attempt the configured receipt transport and observe its real terminal outcome.",
+          "status": "reviewed"
+        },
+        "review": {
+          "transition_id": "tip.dispatch-receipt.003",
+          "status": "reviewed",
+          "evidence_references": ["evidence://receipt-transport/http-503"],
+          "next_state": "EXECUTION_FAILED_CONFIRMED"
+        }
+      }
+    },
+    {
+      "cycle_id": "dti.receipt-recovery.cycle.004",
+      "input_state": "EXECUTION_FAILED_CONFIRMED",
+      "previous_cycle_id": "dti.downstream-action.cycle.003",
+      "recovery_of_cycle_id": "dti.downstream-action.cycle.003",
+      "envelope": {
+        "envelope_version": "0.1",
+        "envelope_id": "dti.receipt-recovery.cycle.004",
+        "dif": {
+          "intent_id": "dif.intent.recover-receipt-delivery.004",
+          "status": "confirmed",
+          "summary": "Recover receipt delivery without replaying or changing the already completed financial action.",
+          "human_confirmed": true
+        },
+        "di": {
+          "feasibility_id": "di.feasibility.recover-receipt.004",
+          "intent_id": "dif.intent.recover-receipt-delivery.004",
+          "status": "conditional",
+          "allowed_paths": ["retry only the receipt transport with bounded recovery semantics"],
+          "blocked_paths": ["re-run payment or fulfillment actions that are already confirmed"],
+          "constraints": ["recovery must remain scoped to the failed receipt transport"]
+        },
+        "drp": {
+          "record_id": "drp.recover-receipt.004",
+          "feasibility_id": "di.feasibility.recover-receipt.004",
+          "decision_summary": "Recover only the failed receipt transport and preserve prior confirmed states.",
+          "status": "committed"
+        },
+        "tip": {
+          "transition_id": "tip.recover-receipt.004",
+          "decision_record_id": "drp.recover-receipt.004",
+          "starting_state": "EXECUTION_FAILED_CONFIRMED",
+          "target_state": "RECEIPT_DELIVERED",
+          "action_summary": "Perform one bounded receipt-delivery recovery attempt and review the observed result.",
+          "status": "reviewed"
+        },
+        "review": {
+          "transition_id": "tip.recover-receipt.004",
+          "status": "reviewed",
+          "evidence_references": ["evidence://receipt-transport/http-200", "evidence://receipt/provider-message-id"],
+          "next_state": "RECOVERY_CONFIRMED"
+        }
+      }
+    }
+  ]
+}
