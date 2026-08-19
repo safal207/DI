@@ -2,7 +2,7 @@
 
 This manifest lists the seed fixtures used to review the DI schemas, the cross-stack integration envelope, and the closed-loop cycle chain.
 
-The fixtures are intentionally small. They are not a full validation suite yet. They provide concrete examples for schema validation, semantic handoff checks, cycle continuity checks, CLI checks, and CI integration.
+The fixtures are intentionally small. They are not a full validation suite yet. They provide concrete examples for schema validation, semantic handoff checks, cycle continuity checks, recovery provenance checks, CLI checks, and CI integration.
 
 | Fixture | Schema | Expected Result | Purpose |
 |---|---|---|---|
@@ -16,6 +16,8 @@ The fixtures are intentionally small. They are not a full validation suite yet. 
 | `fixtures/invalid-decision-transition-envelope-reviewed-without-evidence.json` | `schemas/decision-transition-envelope.schema.json` | fail | Demonstrates that a reviewed transition cannot claim closure without evidence references. |
 | `fixtures/valid-decision-transition-cycle-chain-two-cycles.json` | `schemas/decision-transition-cycle-chain.schema.json` | pass | Demonstrates two reviewed cycles where cycle 1 `next_state` becomes the exact cycle 2 `input_state`. |
 | `fixtures/invalid-decision-transition-cycle-chain-state-mismatch.json` | `schemas/decision-transition-cycle-chain.schema.json` | fail | Demonstrates rejection when cycle 2 silently starts from a state different from the previous reviewed `next_state`. |
+| `fixtures/valid-decision-transition-cycle-chain-recovery.json` | `schemas/decision-transition-cycle-chain.schema.json` | pass | Demonstrates preserved failure followed by a separate evidence-backed recovery cycle linked with `recovery_of_cycle_id`. |
+| `fixtures/invalid-decision-transition-cycle-chain-recovery-without-evidence.json` | `schemas/decision-transition-cycle-chain.schema.json` | fail | Demonstrates rejection when a recovery cycle claims reviewed closure without recovery evidence. |
 
 ## Validation
 
@@ -70,7 +72,17 @@ cycle[n].previous_cycle_id == cycle[n-1].cycle_id
 cycle[n].input_state == cycle[n-1].envelope.review.next_state
 ```
 
+For an explicit recovery cycle, it additionally requires:
+
+```text
+recovery_of_cycle_id == previous_cycle_id
+```
+
+and the referenced failed cycle must already exist earlier in the chain. The failed observation remains preserved; recovery is a new reviewed cycle rather than a rewrite of the failed one.
+
 It validates every nested envelope with the envelope schema and semantic rules, and requires chained cycles to be reviewed before their observed state can seed another cycle.
+
+See [`docs/closed-loop-recovery.md`](docs/closed-loop-recovery.md) for the failure → recovery walkthrough.
 
 The validator does not implement full JSON Schema 2020-12.
 
@@ -85,6 +97,7 @@ This repository currently defines:
 - a minimal fixture validation script,
 - semantic handoff checks for the cross-stack envelope,
 - semantic continuity checks across sequential cycles,
+- explicit recovery provenance across failed and recovered cycles,
 - minimal CI validation for fixtures.
 
 It does not yet define:
