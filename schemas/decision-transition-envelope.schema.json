@@ -14,13 +14,8 @@
     "review"
   ],
   "properties": {
-    "envelope_version": {
-      "type": "string",
-      "enum": ["0.1"]
-    },
-    "envelope_id": {
-      "type": "string"
-    },
+    "envelope_version": {"type": "string", "enum": ["0.1"]},
+    "envelope_id": {"type": "string"},
     "dif": {
       "type": "object",
       "additionalProperties": false,
@@ -35,33 +30,14 @@
     "di": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "feasibility_id",
-        "intent_id",
-        "status",
-        "allowed_paths",
-        "blocked_paths",
-        "constraints"
-      ],
+      "required": ["feasibility_id", "intent_id", "status", "allowed_paths", "blocked_paths", "constraints"],
       "properties": {
         "feasibility_id": {"type": "string"},
         "intent_id": {"type": "string"},
-        "status": {
-          "type": "string",
-          "enum": ["feasible", "conditional"]
-        },
-        "allowed_paths": {
-          "type": "array",
-          "items": {"type": "string"}
-        },
-        "blocked_paths": {
-          "type": "array",
-          "items": {"type": "string"}
-        },
-        "constraints": {
-          "type": "array",
-          "items": {"type": "string"}
-        }
+        "status": {"type": "string", "enum": ["feasible", "conditional"]},
+        "allowed_paths": {"type": "array", "items": {"type": "string"}},
+        "blocked_paths": {"type": "array", "items": {"type": "string"}},
+        "constraints": {"type": "array", "items": {"type": "string"}}
       }
     },
     "drp": {
@@ -78,14 +54,7 @@
     "tip": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "transition_id",
-        "decision_record_id",
-        "starting_state",
-        "target_state",
-        "action_summary",
-        "status"
-      ],
+      "required": ["transition_id", "decision_record_id", "starting_state", "target_state", "action_summary", "status"],
       "properties": {
         "transition_id": {"type": "string"},
         "decision_record_id": {"type": "string"},
@@ -102,11 +71,11 @@
       "properties": {
         "transition_id": {"type": "string"},
         "status": {"type": "string", "enum": ["pending", "reviewed"]},
-        "evidence_references": {
-          "type": "array",
-          "items": {"type": "string"}
-        },
-        "next_state": {"type": "string"}
+        "evidence_references": {"type": "array", "items": {"type": "string"}},
+        "next_state": {"type": "string"},
+        "reviewed_at": {"type": "string"},
+        "accepted_state_generation": {"type": "integer"},
+        "max_evidence_age_seconds": {"type": "integer"}
       }
     }
   }
