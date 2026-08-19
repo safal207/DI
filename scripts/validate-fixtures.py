@@ -3,6 +3,9 @@
 
 This script intentionally implements only the small JSON Schema subset needed by
 this repository's seed schemas. It uses Python standard library only.
+
+For the cross-stack Decision & Transition Integrity Envelope, the script also
+checks reference-continuity invariants that JSON Schema alone cannot express.
 """
 
 from __future__ import annotations
@@ -12,6 +15,7 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
+ENVELOPE_SCHEMA = "schemas/decision-transition-envelope.schema.json"
 
 CASES = [
     (
@@ -32,6 +36,26 @@ CASES = [
     (
         "fixtures/invalid-feasibility-missing-request.json",
         "schemas/feasibility-check.schema.json",
+        False,
+    ),
+    (
+        "fixtures/valid-decision-transition-envelope.json",
+        ENVELOPE_SCHEMA,
+        True,
+    ),
+    (
+        "fixtures/valid-decision-transition-envelope-reviewed.json",
+        ENVELOPE_SCHEMA,
+        True,
+    ),
+    (
+        "fixtures/invalid-decision-transition-envelope-broken-reference.json",
+        ENVELOPE_SCHEMA,
+        False,
+    ),
+    (
+        "fixtures/invalid-decision-transition-envelope-reviewed-without-evidence.json",
+        ENVELOPE_SCHEMA,
         False,
     ),
 ]
@@ -101,6 +125,74 @@ def validate(instance: Any, schema: dict[str, Any], path: str = "$") -> list[str
     return errors
 
 
+def validate_envelope_semantics(instance: Any) -> list[str]:
+    """Validate cross-stack handoff continuity beyond JSON shape."""
+
+    if not isinstance(instance, dict):
+        return ["$: envelope must be an object"]
+
+    errors: list[str] = []
+
+    dif = instance.get("dif")
+    di = instance.get("di")
+    drp = instance.get("drp")
+    tip = instance.get("tip")
+    review = instance.get("review")
+
+    if not all(isinstance(part, dict) for part in (dif, di, drp, tip, review)):
+        return errors
+
+    if dif.get("human_confirmed") is not True:
+        errors.append("$.dif.human_confirmed: cross-stack intent must be human-confirmed")
+
+    if di.get("intent_id") != dif.get("intent_id"):
+        errors.append(
+            "$.di.intent_id: must exactly match $.dif.intent_id to preserve DIF → DI identity"
+        )
+
+    if drp.get("feasibility_id") != di.get("feasibility_id"):
+        errors.append(
+            "$.drp.feasibility_id: must exactly match $.di.feasibility_id to preserve DI → DRP identity"
+        )
+
+    if tip.get("decision_record_id") != drp.get("record_id"):
+        errors.append(
+            "$.tip.decision_record_id: must exactly match $.drp.record_id to preserve DRP → TIP identity"
+        )
+
+    if review.get("transition_id") != tip.get("transition_id"):
+        errors.append(
+            "$.review.transition_id: must exactly match $.tip.transition_id to preserve TIP → Review identity"
+        )
+
+    review_status = review.get("status")
+    tip_status = tip.get("status")
+
+    if review_status == "reviewed":
+        evidence = review.get("evidence_references")
+        next_state = review.get("next_state")
+
+        if tip_status != "reviewed":
+            errors.append(
+                "$.tip.status: must be 'reviewed' when $.review.status is 'reviewed'"
+            )
+        if not isinstance(evidence, list) or not evidence:
+            errors.append(
+                "$.review.evidence_references: reviewed envelope requires at least one evidence reference"
+            )
+        if not isinstance(next_state, str) or not next_state or next_state == "UNOBSERVED":
+            errors.append(
+                "$.review.next_state: reviewed envelope requires a concrete observed next state"
+            )
+
+    if review_status == "pending" and tip_status != "committed":
+        errors.append(
+            "$.tip.status: pending review requires the transition to remain 'committed'"
+        )
+
+    return errors
+
+
 def run_case(fixture_rel: str, schema_rel: str, expected_pass: bool) -> bool:
     fixture_path = ROOT / fixture_rel
     schema_path = ROOT / schema_rel
@@ -109,6 +201,8 @@ def run_case(fixture_rel: str, schema_rel: str, expected_pass: bool) -> bool:
         fixture = load_json(fixture_path)
         schema = load_json(schema_path)
         errors = validate(fixture, schema)
+        if schema_rel == ENVELOPE_SCHEMA:
+            errors.extend(validate_envelope_semantics(fixture))
     except ValueError as exc:
         errors = [str(exc)]
 
