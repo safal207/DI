@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Validate Recovery Decision Matrix -> recovery-cycle execution binding.
+"""Validate recovery decision -> execution -> observed execution binding.
 
 This validator is intentionally narrow. It checks that a recovery decision made
-for a failed cycle is the same recovery mode that the next cycle actually
-executes. It does not redefine DIF, DI, DRP, or TIP semantics.
+for a failed cycle is the same recovery mode the next cycle declares and the
+same mode an Execution Receipt says was actually observed. It does not redefine
+DIF, DI, DRP, or TIP semantics.
 """
 
 from __future__ import annotations
@@ -18,6 +19,8 @@ CASES = [
     ("fixtures/valid-decision-transition-cycle-chain-recovery.json", True),
     ("fixtures/invalid-recovery-execution-binding-action-mismatch.json", False),
     ("fixtures/invalid-recovery-execution-binding-stop-continued.json", False),
+    ("fixtures/invalid-execution-receipt-mode-mismatch.json", False),
+    ("fixtures/invalid-execution-receipt-without-evidence.json", False),
 ]
 
 
@@ -68,6 +71,72 @@ def validate_matrix(decision: dict[str, Any], path: str) -> list[str]:
     return errors
 
 
+def validate_execution_receipt(
+    receipt: dict[str, Any],
+    *,
+    path: str,
+    decision: dict[str, Any],
+    cycle: dict[str, Any],
+    recovery_of: Any,
+    execution_mode: Any,
+) -> list[str]:
+    """Validate that observed execution is faithful to the selected recovery action."""
+
+    errors: list[str] = []
+    if receipt.get("receipt_version") != "0.1":
+        errors.append(f"{path}.receipt_version: expected '0.1'")
+    if not isinstance(receipt.get("receipt_id"), str) or not receipt.get("receipt_id"):
+        errors.append(f"{path}.receipt_id: required")
+
+    if receipt.get("recovery_decision_id") != decision.get("decision_id"):
+        errors.append(f"{path}.recovery_decision_id: must exactly match recovery_decision.decision_id")
+    if receipt.get("source_cycle_id") != recovery_of:
+        errors.append(f"{path}.source_cycle_id: must exactly match recovery_of_cycle_id")
+    if receipt.get("recovery_cycle_id") != cycle.get("cycle_id"):
+        errors.append(f"{path}.recovery_cycle_id: must exactly match the current recovery cycle_id")
+
+    declared = receipt.get("declared_execution_mode")
+    observed = receipt.get("observed_execution_mode")
+    status = receipt.get("execution_status")
+    evidence = receipt.get("evidence_references")
+    selected = decision.get("selected_action")
+
+    if declared != execution_mode:
+        errors.append(f"{path}.declared_execution_mode: must exactly match recovery cycle execution_mode")
+    if declared != selected:
+        errors.append(f"{path}.declared_execution_mode: must exactly match matrix selected_action")
+
+    if status not in {"observed", "failed", "unknown"}:
+        errors.append(f"{path}.execution_status: unsupported status {status!r}")
+
+    if not isinstance(evidence, list) or not evidence:
+        errors.append(f"{path}.evidence_references: execution receipt requires at least one evidence reference")
+
+    if status == "observed":
+        if observed != declared:
+            errors.append(
+                f"{path}.observed_execution_mode: {observed!r} must exactly match declared execution mode {declared!r}"
+            )
+        if observed == "UNKNOWN":
+            errors.append(f"{path}.observed_execution_mode: observed receipt cannot claim UNKNOWN execution mode")
+    elif observed not in {declared, "UNKNOWN"}:
+        errors.append(
+            f"{path}.observed_execution_mode: failed/unknown receipt may only preserve the declared mode or UNKNOWN"
+        )
+
+    envelope = cycle.get("envelope")
+    if isinstance(envelope, dict):
+        review = envelope.get("review")
+        if isinstance(review, dict) and review.get("status") == "reviewed":
+            next_state = review.get("next_state")
+            if next_state == "RECOVERY_CONFIRMED" and status != "observed":
+                errors.append(
+                    f"{path}.execution_status: RECOVERY_CONFIRMED requires an observed execution receipt"
+                )
+
+    return errors
+
+
 def validate_binding(instance: Any) -> list[str]:
     if not isinstance(instance, dict):
         return ["$: chain must be an object"]
@@ -86,12 +155,15 @@ def validate_binding(instance: Any) -> list[str]:
         recovery_of = cycle.get("recovery_of_cycle_id")
         execution_mode = cycle.get("execution_mode")
         decision = cycle.get("recovery_decision")
+        receipt = cycle.get("execution_receipt")
 
         if recovery_of is None:
             if execution_mode is not None:
                 errors.append(f"{path}.execution_mode: only recovery cycles may declare execution_mode")
             if decision is not None:
                 errors.append(f"{path}.recovery_decision: only recovery cycles may carry a recovery decision")
+            if receipt is not None:
+                errors.append(f"{path}.execution_receipt: only recovery cycles may carry an execution receipt")
             continue
 
         if index == 0:
@@ -142,6 +214,24 @@ def validate_binding(instance: Any) -> list[str]:
             errors.append(
                 f"{path}: STOP forbids creation of an active automated recovery cycle; preserve the failed state instead"
             )
+            continue
+
+        if not isinstance(receipt, dict):
+            errors.append(
+                f"{path}.execution_receipt: active recovery cycle requires an Execution Receipt proving observed execution"
+            )
+            continue
+
+        errors.extend(
+            validate_execution_receipt(
+                receipt,
+                path=f"{path}.execution_receipt",
+                decision=decision,
+                cycle=cycle,
+                recovery_of=recovery_of,
+                execution_mode=execution_mode,
+            )
+        )
 
     return errors
 
