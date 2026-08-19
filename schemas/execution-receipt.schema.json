@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/safal207/DI/schemas/execution-receipt.schema.json",
+  "title": "Recovery Execution Receipt v0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "receipt_version",
+    "receipt_id",
+    "recovery_decision_id",
+    "source_cycle_id",
+    "recovery_cycle_id",
+    "declared_execution_mode",
+    "observed_execution_mode",
+    "execution_status",
+    "evidence_references"
+  ],
+  "properties": {
+    "receipt_version": {"type": "string", "enum": ["0.1"]},
+    "receipt_id": {"type": "string"},
+    "recovery_decision_id": {"type": "string"},
+    "source_cycle_id": {"type": "string"},
+    "recovery_cycle_id": {"type": "string"},
+    "declared_execution_mode": {
+      "type": "string",
+      "enum": ["SAFE_RETRY", "ROLLBACK", "HUMAN_ESCALATION"]
+    },
+    "observed_execution_mode": {
+      "type": "string",
+      "enum": ["SAFE_RETRY", "ROLLBACK", "HUMAN_ESCALATION", "UNKNOWN"]
+    },
+    "execution_status": {
+      "type": "string",
+      "enum": ["observed", "failed", "unknown"]
+    },
+    "evidence_references": {
+      "type": "array",
+      "items": {"type": "string"}
+    }
+  }
+}
