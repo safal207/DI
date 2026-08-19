@@ -1,0 +1,17 @@
+{
+  "matrix_version": "0.1",
+  "decision_id": "recovery.human-escalation-no-trigger.001",
+  "source_cycle_id": "dti.failure.cycle.003",
+  "failure_state": "EXECUTION_FAILED_CONFIRMED",
+  "consequence_level": "low",
+  "uncertainty_level": "low",
+  "idempotency_verified": true,
+  "operation_reversible": true,
+  "rollback_available": true,
+  "authority_boundary": false,
+  "policy_requires_human": false,
+  "escalation_trigger": "NONE",
+  "selected_action": "HUMAN_ESCALATION",
+  "rationale": "Escalation requested without any explicit escalation trigger.",
+  "evidence_references": ["evidence://failure/terminal-confirmed"]
+}
