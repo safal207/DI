@@ -1,0 +1,111 @@
+{
+  "chain_version": "0.1",
+  "chain_id": "dti.chain.recovery-binding.mismatch.001",
+  "cycles": [
+    {
+      "cycle_id": "dti.delivery-failure.cycle.001",
+      "input_state": "READY_TO_SEND",
+      "previous_cycle_id": "NONE",
+      "envelope": {
+        "envelope_version": "0.1",
+        "envelope_id": "dti.delivery-failure.cycle.001",
+        "dif": {
+          "intent_id": "dif.intent.send-once.001",
+          "status": "confirmed",
+          "summary": "Send the message once and preserve the real transport result.",
+          "human_confirmed": true
+        },
+        "di": {
+          "feasibility_id": "di.feasibility.send-once.001",
+          "intent_id": "dif.intent.send-once.001",
+          "status": "feasible",
+          "allowed_paths": ["attempt the configured transport once"],
+          "blocked_paths": ["claim delivery without transport evidence"],
+          "constraints": ["terminal outcome must be observed"]
+        },
+        "drp": {
+          "record_id": "drp.send-once.001",
+          "feasibility_id": "di.feasibility.send-once.001",
+          "decision_summary": "Attempt once and record the real outcome.",
+          "status": "committed"
+        },
+        "tip": {
+          "transition_id": "tip.send-once.001",
+          "decision_record_id": "drp.send-once.001",
+          "starting_state": "READY_TO_SEND",
+          "target_state": "DELIVERED",
+          "action_summary": "Attempt delivery once.",
+          "status": "reviewed"
+        },
+        "review": {
+          "transition_id": "tip.send-once.001",
+          "status": "reviewed",
+          "evidence_references": ["evidence://transport/http-503"],
+          "next_state": "EXECUTION_FAILED_CONFIRMED"
+        }
+      }
+    },
+    {
+      "cycle_id": "dti.delivery-recovery.cycle.002",
+      "input_state": "EXECUTION_FAILED_CONFIRMED",
+      "previous_cycle_id": "dti.delivery-failure.cycle.001",
+      "recovery_of_cycle_id": "dti.delivery-failure.cycle.001",
+      "execution_mode": "ROLLBACK",
+      "recovery_decision": {
+        "matrix_version": "0.1",
+        "decision_id": "recovery.delivery.safe-retry.002",
+        "source_cycle_id": "dti.delivery-failure.cycle.001",
+        "failure_state": "EXECUTION_FAILED_CONFIRMED",
+        "consequence_level": "medium",
+        "uncertainty_level": "low",
+        "idempotency_verified": true,
+        "operation_reversible": false,
+        "rollback_available": false,
+        "authority_boundary": false,
+        "policy_requires_human": false,
+        "escalation_trigger": "NONE",
+        "selected_action": "SAFE_RETRY",
+        "rationale": "The transport retry is safe because the delivery key is verified idempotent.",
+        "evidence_references": ["evidence://transport/idempotency-key"]
+      },
+      "envelope": {
+        "envelope_version": "0.1",
+        "envelope_id": "dti.delivery-recovery.cycle.002",
+        "dif": {
+          "intent_id": "dif.intent.recover-delivery.002",
+          "status": "confirmed",
+          "summary": "Recover only the failed delivery.",
+          "human_confirmed": true
+        },
+        "di": {
+          "feasibility_id": "di.feasibility.recover-delivery.002",
+          "intent_id": "dif.intent.recover-delivery.002",
+          "status": "conditional",
+          "allowed_paths": ["safe retry under the verified idempotency contract"],
+          "blocked_paths": ["change unrelated completed state"],
+          "constraints": ["recovery must stay scoped to delivery"]
+        },
+        "drp": {
+          "record_id": "drp.recover-delivery.002",
+          "feasibility_id": "di.feasibility.recover-delivery.002",
+          "decision_summary": "Retry only the failed delivery under the verified idempotency contract.",
+          "status": "committed"
+        },
+        "tip": {
+          "transition_id": "tip.recover-delivery.002",
+          "decision_record_id": "drp.recover-delivery.002",
+          "starting_state": "EXECUTION_FAILED_CONFIRMED",
+          "target_state": "DELIVERED",
+          "action_summary": "Retry the failed delivery once.",
+          "status": "reviewed"
+        },
+        "review": {
+          "transition_id": "tip.recover-delivery.002",
+          "status": "reviewed",
+          "evidence_references": ["evidence://transport/http-200"],
+          "next_state": "RECOVERY_CONFIRMED"
+        }
+      }
+    }
+  ]
+}
