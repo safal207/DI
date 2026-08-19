@@ -33,6 +33,13 @@
       "type": "string",
       "enum": ["observed", "failed", "unknown"]
     },
+    "authority_receipt_id": {"type": "string"},
+    "authority_generation_at_execution": {"type": "integer"},
+    "authority_status_at_execution": {
+      "type": "string",
+      "enum": ["active", "revoked", "unknown"]
+    },
+    "executed_at": {"type": "string"},
     "evidence_references": {
       "type": "array",
       "items": {"type": "string"}
