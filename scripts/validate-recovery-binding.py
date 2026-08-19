@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Validate recovery decision -> execution -> observed state effect binding.
+"""Validate recovery decision -> authority -> execution -> state-effect binding.
 
-This validator checks that a recovery decision is faithfully executed, that the
-execution produces the claimed state effect, and that evidence accepted by a
-review is fresh for the state generation being reviewed.
+This validator checks that a recovery decision is faithfully executed, that
+active authority is revalidated at the execution seam, that the execution
+produces the claimed state effect, and that evidence accepted by review is fresh
+for the state generation being reviewed.
 
 It does not redefine DIF, DI, DRP, or TIP semantics.
 """
@@ -27,6 +28,8 @@ CASES = [
     ("fixtures/invalid-state-effect-without-evidence.json", False),
     ("fixtures/invalid-state-effect-stale-generation.json", False),
     ("fixtures/invalid-state-effect-stale-time.json", False),
+    ("fixtures/invalid-authority-revoked-before-execution.json", False),
+    ("fixtures/invalid-authority-generation-mismatch.json", False),
 ]
 
 
@@ -89,6 +92,104 @@ def validate_matrix(decision: dict[str, Any], path: str) -> list[str]:
     if action != "HUMAN_ESCALATION" and trigger != "NONE":
         errors.append(f"{path}.escalation_trigger: non-escalation actions must use 'NONE'")
 
+    if action in {"SAFE_RETRY", "ROLLBACK"}:
+        if not isinstance(decision.get("authority_id"), str) or not decision.get("authority_id"):
+            errors.append(f"{path}.authority_id: automated recovery requires an authority identity")
+        generation = decision.get("authority_generation")
+        if not isinstance(generation, int) or isinstance(generation, bool) or generation < 0:
+            errors.append(f"{path}.authority_generation: automated recovery requires a non-negative authority generation")
+
+    return errors
+
+
+def validate_use_time_authority(
+    authority: dict[str, Any],
+    *,
+    path: str,
+    decision: dict[str, Any],
+    cycle: dict[str, Any],
+    execution_mode: Any,
+    receipt: dict[str, Any],
+) -> list[str]:
+    """Validate authority at the dispatch/use seam, not only at decision time."""
+
+    errors: list[str] = []
+    if authority.get("authority_receipt_version") != "0.1":
+        errors.append(f"{path}.authority_receipt_version: expected '0.1'")
+    if not isinstance(authority.get("authority_receipt_id"), str) or not authority.get("authority_receipt_id"):
+        errors.append(f"{path}.authority_receipt_id: required")
+    if authority.get("authority_id") != decision.get("authority_id"):
+        errors.append(f"{path}.authority_id: must exactly match recovery_decision.authority_id")
+    if authority.get("recovery_decision_id") != decision.get("decision_id"):
+        errors.append(f"{path}.recovery_decision_id: must exactly match recovery_decision.decision_id")
+    if authority.get("recovery_cycle_id") != cycle.get("cycle_id"):
+        errors.append(f"{path}.recovery_cycle_id: must exactly match current recovery cycle_id")
+    if authority.get("bound_execution_mode") != execution_mode:
+        errors.append(f"{path}.bound_execution_mode: must exactly match recovery cycle execution_mode")
+
+    authority_generation = authority.get("authority_generation")
+    decision_generation = decision.get("authority_generation")
+    if not isinstance(authority_generation, int) or isinstance(authority_generation, bool) or authority_generation < 0:
+        errors.append(f"{path}.authority_generation: non-negative integer is required")
+    elif authority_generation != decision_generation:
+        errors.append(
+            f"{path}.authority_generation: generation {authority_generation!r} must match decision generation {decision_generation!r}"
+        )
+
+    status = authority.get("authority_status")
+    if status not in {"active", "revoked", "unknown"}:
+        errors.append(f"{path}.authority_status: unsupported status {status!r}")
+
+    evidence = authority.get("evidence_references")
+    if not isinstance(evidence, list) or not evidence:
+        errors.append(f"{path}.evidence_references: use-time authority receipt requires evidence")
+
+    checked_at = parse_timestamp(authority.get("checked_at"), f"{path}.checked_at", errors)
+    executed_at = parse_timestamp(receipt.get("executed_at"), f"{path}.execution.executed_at", errors)
+    max_age = authority.get("max_binding_age_seconds")
+    if not isinstance(max_age, int) or isinstance(max_age, bool) or max_age < 0:
+        errors.append(f"{path}.max_binding_age_seconds: non-negative integer is required")
+
+    revoked_at = None
+    if authority.get("revoked_at") is not None:
+        revoked_at = parse_timestamp(authority.get("revoked_at"), f"{path}.revoked_at", errors)
+
+    if checked_at is not None and executed_at is not None:
+        if checked_at > executed_at:
+            errors.append(f"{path}.checked_at: authority cannot be checked after execution")
+        elif isinstance(max_age, int) and not isinstance(max_age, bool) and max_age >= 0:
+            age_seconds = (executed_at - checked_at).total_seconds()
+            if age_seconds > max_age:
+                errors.append(
+                    f"{path}.checked_at: authority binding age {age_seconds:.0f}s exceeds allowed {max_age}s"
+                )
+
+    if status == "revoked" and revoked_at is None:
+        errors.append(f"{path}.revoked_at: revoked authority requires revocation time")
+
+    if revoked_at is not None and executed_at is not None and revoked_at <= executed_at:
+        errors.append(
+            f"{path}.revoked_at: authority was revoked before or at execution time; automated action is forbidden"
+        )
+
+    if execution_mode in {"SAFE_RETRY", "ROLLBACK"} and status != "active":
+        errors.append(f"{path}.authority_status: automated recovery requires active authority at use time")
+
+    if receipt.get("authority_receipt_id") != authority.get("authority_receipt_id"):
+        errors.append(f"{path}.execution.authority_receipt_id: must bind to this authority receipt")
+    if receipt.get("authority_generation_at_execution") != authority_generation:
+        errors.append(
+            f"{path}.execution.authority_generation_at_execution: must match use-time authority generation"
+        )
+    if receipt.get("authority_generation_at_execution") != decision_generation:
+        errors.append(
+            f"{path}.execution.authority_generation_at_execution: must match recovery decision authority generation"
+        )
+    if receipt.get("authority_status_at_execution") != status:
+        errors.append(f"{path}.execution.authority_status_at_execution: must match use-time authority status")
+    if execution_mode in {"SAFE_RETRY", "ROLLBACK"} and receipt.get("authority_status_at_execution") != "active":
+        errors.append(f"{path}.execution.authority_status_at_execution: automated execution requires active authority")
+
     return errors
 
 
@@ -128,6 +229,8 @@ def validate_execution_receipt(
         errors.append(f"{path}.execution_status: unsupported status {status!r}")
     if not isinstance(evidence, list) or not evidence:
         errors.append(f"{path}.evidence_references: execution receipt requires at least one evidence reference")
+
+    parse_timestamp(receipt.get("executed_at"), f"{path}.executed_at", errors)
 
     if status == "observed":
         if observed != declared:
@@ -242,6 +345,7 @@ def validate_binding(instance: Any) -> list[str]:
         recovery_of = cycle.get("recovery_of_cycle_id")
         execution_mode = cycle.get("execution_mode")
         decision = cycle.get("recovery_decision")
+        authority = cycle.get("use_time_authority_receipt")
         receipt = cycle.get("execution_receipt")
         effect = cycle.get("state_effect_receipt")
 
@@ -250,6 +354,8 @@ def validate_binding(instance: Any) -> list[str]:
                 errors.append(f"{path}.execution_mode: only recovery cycles may declare execution_mode")
             if decision is not None:
                 errors.append(f"{path}.recovery_decision: only recovery cycles may carry a recovery decision")
+            if authority is not None:
+                errors.append(f"{path}.use_time_authority_receipt: only recovery cycles may carry authority binding")
             if receipt is not None:
                 errors.append(f"{path}.execution_receipt: only recovery cycles may carry an execution receipt")
             if effect is not None:
@@ -311,6 +417,21 @@ def validate_binding(instance: Any) -> list[str]:
             recovery_of=recovery_of,
             execution_mode=execution_mode,
         ))
+
+        if selected_action in {"SAFE_RETRY", "ROLLBACK"}:
+            if not isinstance(authority, dict):
+                errors.append(
+                    f"{path}.use_time_authority_receipt: automated recovery requires authority revalidation at the execution seam"
+                )
+            else:
+                errors.extend(validate_use_time_authority(
+                    authority,
+                    path=f"{path}.use_time_authority_receipt",
+                    decision=decision,
+                    cycle=cycle,
+                    execution_mode=execution_mode,
+                    receipt=receipt,
+                ))
 
         if not isinstance(effect, dict):
             errors.append(f"{path}.state_effect_receipt: active recovery cycle requires a State Effect Receipt proving the resulting state")
