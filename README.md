@@ -172,7 +172,7 @@ DI/
 
 - [`fixtures/valid-capability.json`](fixtures/valid-capability.json) — expected to pass capability schema validation.
 - [`fixtures/valid-limitation.json`](fixtures/valid-limitation.json) — expected to pass limitation schema validation.
-- [`fixtures/valid-feasibility-check.json`](fixtures/valid-feasibility-check.schema.json) — expected to pass feasibility-check schema validation.
+- [`fixtures/valid-feasibility-check.json`](fixtures/valid-feasibility-check.json) — expected to pass feasibility-check schema validation.
 - [`fixtures/invalid-feasibility-missing-request.json`](fixtures/invalid-feasibility-missing-request.json) — expected to fail feasibility-check schema validation.
 
 See [`MANIFEST.md`](MANIFEST.md) for the fixture map.
