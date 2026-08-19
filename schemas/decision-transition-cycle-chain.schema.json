@@ -23,6 +23,7 @@
           "cycle_id": {"type": "string"},
           "input_state": {"type": "string"},
           "previous_cycle_id": {"type": "string"},
+          "recovery_of_cycle_id": {"type": "string"},
           "envelope": {"type": "object"}
         }
       }
