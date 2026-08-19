@@ -39,6 +39,8 @@
     "rollback_available": {"type": "boolean"},
     "authority_boundary": {"type": "boolean"},
     "policy_requires_human": {"type": "boolean"},
+    "authority_id": {"type": "string"},
+    "authority_generation": {"type": "integer"},
     "escalation_trigger": {
       "type": "string",
       "enum": [
