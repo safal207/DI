@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/safal207/DI/schemas/recovery-decision-matrix.schema.json",
+  "title": "Recovery Decision Matrix v0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "matrix_version",
+    "decision_id",
+    "source_cycle_id",
+    "failure_state",
+    "consequence_level",
+    "uncertainty_level",
+    "idempotency_verified",
+    "operation_reversible",
+    "rollback_available",
+    "authority_boundary",
+    "policy_requires_human",
+    "escalation_trigger",
+    "selected_action",
+    "rationale",
+    "evidence_references"
+  ],
+  "properties": {
+    "matrix_version": {"type": "string", "enum": ["0.1"]},
+    "decision_id": {"type": "string"},
+    "source_cycle_id": {"type": "string"},
+    "failure_state": {"type": "string"},
+    "consequence_level": {
+      "type": "string",
+      "enum": ["low", "medium", "high"]
+    },
+    "uncertainty_level": {
+      "type": "string",
+      "enum": ["low", "medium", "high"]
+    },
+    "idempotency_verified": {"type": "boolean"},
+    "operation_reversible": {"type": "boolean"},
+    "rollback_available": {"type": "boolean"},
+    "authority_boundary": {"type": "boolean"},
+    "policy_requires_human": {"type": "boolean"},
+    "escalation_trigger": {
+      "type": "string",
+      "enum": [
+        "NONE",
+        "HIGH_CONSEQUENCE",
+        "CRITICAL_UNKNOWN",
+        "AUTHORITY_BOUNDARY",
+        "POLICY_REQUIRES_HUMAN"
+      ]
+    },
+    "selected_action": {
+      "type": "string",
+      "enum": ["SAFE_RETRY", "ROLLBACK", "STOP", "HUMAN_ESCALATION"]
+    },
+    "rationale": {"type": "string"},
+    "evidence_references": {
+      "type": "array",
+      "items": {"type": "string"}
+    }
+  }
+}
