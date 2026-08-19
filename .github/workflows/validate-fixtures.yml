@@ -21,3 +21,6 @@ jobs:
 
       - name: Validate fixtures
         run: python scripts/validate-fixtures.py
+
+      - name: Validate recovery decision execution binding
+        run: python scripts/validate-recovery-binding.py
