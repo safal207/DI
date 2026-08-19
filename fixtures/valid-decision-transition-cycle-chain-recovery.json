@@ -86,6 +86,8 @@
         "expected_target_state": "RECEIPT_DELIVERED",
         "observed_state": "RECEIPT_DELIVERED",
         "effect_status": "observed",
+        "observed_at": "2026-08-19T12:30:00+00:00",
+        "state_generation": 4,
         "evidence_references": ["evidence://receipt/provider-message-id", "evidence://receipt/status/delivered"]
       },
       "envelope": {
@@ -95,7 +97,15 @@
         "di": {"feasibility_id": "di.feasibility.recover-receipt.004", "intent_id": "dif.intent.recover-receipt-delivery.004", "status": "conditional", "allowed_paths": ["retry only the receipt transport with bounded recovery semantics"], "blocked_paths": ["re-run payment or fulfillment actions that are already confirmed"], "constraints": ["recovery must remain scoped to the failed receipt transport"]},
         "drp": {"record_id": "drp.recover-receipt.004", "feasibility_id": "di.feasibility.recover-receipt.004", "decision_summary": "Recover only the failed receipt transport and preserve prior confirmed states.", "status": "committed"},
         "tip": {"transition_id": "tip.recover-receipt.004", "decision_record_id": "drp.recover-receipt.004", "starting_state": "EXECUTION_FAILED_CONFIRMED", "target_state": "RECEIPT_DELIVERED", "action_summary": "Perform one bounded receipt-delivery recovery attempt and review the observed result.", "status": "reviewed"},
-        "review": {"transition_id": "tip.recover-receipt.004", "status": "reviewed", "evidence_references": ["evidence://receipt-transport/http-200", "evidence://receipt/provider-message-id"], "next_state": "RECOVERY_CONFIRMED"}
+        "review": {
+          "transition_id": "tip.recover-receipt.004",
+          "status": "reviewed",
+          "evidence_references": ["evidence://receipt-transport/http-200", "evidence://receipt/provider-message-id"],
+          "next_state": "RECOVERY_CONFIRMED",
+          "reviewed_at": "2026-08-19T12:30:10+00:00",
+          "accepted_state_generation": 4,
+          "max_evidence_age_seconds": 60
+        }
       }
     }
   ]
