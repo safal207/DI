@@ -1,0 +1,93 @@
+{
+  "chain_version": "0.1",
+  "chain_id": "dti.chain.failure-recovery.invalid-no-evidence.001",
+  "cycles": [
+    {
+      "cycle_id": "dti.failed-action.cycle.001",
+      "input_state": "READY_TO_EXECUTE",
+      "previous_cycle_id": "NONE",
+      "envelope": {
+        "envelope_version": "0.1",
+        "envelope_id": "dti.failed-action.cycle.001",
+        "dif": {
+          "intent_id": "dif.intent.execute-once.001",
+          "status": "confirmed",
+          "summary": "Execute the intended action once and preserve the observed result.",
+          "human_confirmed": true
+        },
+        "di": {
+          "feasibility_id": "di.feasibility.execute-once.001",
+          "intent_id": "dif.intent.execute-once.001",
+          "status": "feasible",
+          "allowed_paths": ["attempt the configured action once"],
+          "blocked_paths": ["claim success without observing the transport result"],
+          "constraints": ["terminal outcome must be evidence-backed"]
+        },
+        "drp": {
+          "record_id": "drp.execute-once.001",
+          "feasibility_id": "di.feasibility.execute-once.001",
+          "decision_summary": "Attempt once and preserve the real terminal result.",
+          "status": "committed"
+        },
+        "tip": {
+          "transition_id": "tip.execute-once.001",
+          "decision_record_id": "drp.execute-once.001",
+          "starting_state": "READY_TO_EXECUTE",
+          "target_state": "EXECUTION_SUCCEEDED",
+          "action_summary": "Attempt the action and observe its result.",
+          "status": "reviewed"
+        },
+        "review": {
+          "transition_id": "tip.execute-once.001",
+          "status": "reviewed",
+          "evidence_references": ["evidence://transport/http-503"],
+          "next_state": "EXECUTION_FAILED_CONFIRMED"
+        }
+      }
+    },
+    {
+      "cycle_id": "dti.recovery.cycle.002",
+      "input_state": "EXECUTION_FAILED_CONFIRMED",
+      "previous_cycle_id": "dti.failed-action.cycle.001",
+      "recovery_of_cycle_id": "dti.failed-action.cycle.001",
+      "envelope": {
+        "envelope_version": "0.1",
+        "envelope_id": "dti.recovery.cycle.002",
+        "dif": {
+          "intent_id": "dif.intent.recover.002",
+          "status": "confirmed",
+          "summary": "Recover only the failed action.",
+          "human_confirmed": true
+        },
+        "di": {
+          "feasibility_id": "di.feasibility.recover.002",
+          "intent_id": "dif.intent.recover.002",
+          "status": "conditional",
+          "allowed_paths": ["perform one bounded recovery attempt"],
+          "blocked_paths": ["rewrite the previous failed observation"],
+          "constraints": ["recovery closure requires observed evidence"]
+        },
+        "drp": {
+          "record_id": "drp.recover.002",
+          "feasibility_id": "di.feasibility.recover.002",
+          "decision_summary": "Perform a bounded recovery attempt.",
+          "status": "committed"
+        },
+        "tip": {
+          "transition_id": "tip.recover.002",
+          "decision_record_id": "drp.recover.002",
+          "starting_state": "EXECUTION_FAILED_CONFIRMED",
+          "target_state": "RECOVERED",
+          "action_summary": "Attempt recovery and observe the result.",
+          "status": "reviewed"
+        },
+        "review": {
+          "transition_id": "tip.recover.002",
+          "status": "reviewed",
+          "evidence_references": [],
+          "next_state": "RECOVERY_CONFIRMED"
+        }
+      }
+    }
+  ]
+}
