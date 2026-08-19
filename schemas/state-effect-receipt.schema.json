@@ -12,6 +12,8 @@
     "expected_target_state",
     "observed_state",
     "effect_status",
+    "observed_at",
+    "state_generation",
     "evidence_references"
   ],
   "properties": {
@@ -25,6 +27,8 @@
       "type": "string",
       "enum": ["observed", "failed", "unknown"]
     },
+    "observed_at": {"type": "string"},
+    "state_generation": {"type": "integer"},
     "evidence_references": {
       "type": "array",
       "items": {"type": "string"}
