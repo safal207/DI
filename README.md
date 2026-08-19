@@ -104,6 +104,10 @@ Adjacent protocol:
 
 - [TIP / Transition Intelligence Protocol](https://github.com/safal207/transition-intelligence-protocol) — studies transitions between states, including readiness, ambiguity, and safe movement from one state to another.
 
+Cross-repo architecture note:
+
+- [`docs/decision-transition-integrity-stack.md`](docs/decision-transition-integrity-stack.md) — defines how DIF, DI, DRP, and TIP cooperate while keeping their protocol boundaries separate, including handoff invariants and an anonymous financial walkthrough.
+
 Each repository should stay narrow. DIF should not become DI. DI should not become DRP. DRP should not become an execution engine. TIP should not replace the decision stack; it should describe transition dynamics around it.
 
 ## Minimal Flow
@@ -127,7 +131,8 @@ DI/
 │   ├── concept.md
 │   ├── capability-boundaries.md
 │   ├── limitation-model.md
-│   └── relation-to-dif-and-drp.md
+│   ├── relation-to-dif-and-drp.md
+│   └── decision-transition-integrity-stack.md
 ├── schemas/
 │   ├── capability.schema.json
 │   ├── limitation.schema.json
@@ -155,6 +160,7 @@ DI/
 - [`docs/capability-boundaries.md`](docs/capability-boundaries.md) — explains why technical capability is not permission.
 - [`docs/limitation-model.md`](docs/limitation-model.md) — defines explicit limitation categories and severity levels.
 - [`docs/relation-to-dif-and-drp.md`](docs/relation-to-dif-and-drp.md) — positions DI between DIF and DRP.
+- [`docs/decision-transition-integrity-stack.md`](docs/decision-transition-integrity-stack.md) — cross-repo architecture for `DIF → DI → DRP` with TIP as the adjacent transition/review protocol.
 
 ## Schemas
 
@@ -166,7 +172,7 @@ DI/
 
 - [`fixtures/valid-capability.json`](fixtures/valid-capability.json) — expected to pass capability schema validation.
 - [`fixtures/valid-limitation.json`](fixtures/valid-limitation.json) — expected to pass limitation schema validation.
-- [`fixtures/valid-feasibility-check.json`](fixtures/valid-feasibility-check.json) — expected to pass feasibility-check schema validation.
+- [`fixtures/valid-feasibility-check.json`](fixtures/valid-feasibility-check.schema.json) — expected to pass feasibility-check schema validation.
 - [`fixtures/invalid-feasibility-missing-request.json`](fixtures/invalid-feasibility-missing-request.json) — expected to fail feasibility-check schema validation.
 
 See [`MANIFEST.md`](MANIFEST.md) for the fixture map.
