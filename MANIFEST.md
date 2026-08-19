@@ -1,10 +1,10 @@
 # DI Fixture Manifest
 
-This manifest lists the seed fixtures used to review the DI schemas, the cross-stack integration envelope, the closed-loop cycle chain, and the Recovery Decision Matrix.
+This manifest lists the seed fixtures used to review the DI schemas, the cross-stack integration envelope, the closed-loop cycle chain, the Recovery Decision Matrix, and recovery decision → execution binding.
 
-The fixtures are intentionally small. They are not a full validation suite yet. They provide concrete examples for schema validation, semantic handoff checks, cycle continuity checks, recovery provenance checks, recovery-path admissibility checks, CLI checks, and CI integration.
+The fixtures are intentionally small. They are not a full validation suite yet. They provide concrete examples for schema validation, semantic handoff checks, cycle continuity checks, recovery provenance checks, recovery-path admissibility checks, decision-to-execution binding checks, CLI checks, and CI integration.
 
-| Fixture | Schema | Expected Result | Purpose |
+| Fixture | Schema / Validator | Expected Result | Purpose |
 |---|---|---|---|
 | `fixtures/valid-capability.json` | `schemas/capability.schema.json` | pass | Demonstrates a constrained but available DI capability record for support-note drafting. |
 | `fixtures/valid-limitation.json` | `schemas/limitation.schema.json` | pass | Demonstrates a blocking limitation caused by missing permission / unverified identity. |
@@ -16,8 +16,8 @@ The fixtures are intentionally small. They are not a full validation suite yet. 
 | `fixtures/invalid-decision-transition-envelope-reviewed-without-evidence.json` | `schemas/decision-transition-envelope.schema.json` | fail | Demonstrates that a reviewed transition cannot claim closure without evidence references. |
 | `fixtures/valid-decision-transition-cycle-chain-two-cycles.json` | `schemas/decision-transition-cycle-chain.schema.json` | pass | Demonstrates two reviewed cycles where cycle 1 `next_state` becomes the exact cycle 2 `input_state`. |
 | `fixtures/invalid-decision-transition-cycle-chain-state-mismatch.json` | `schemas/decision-transition-cycle-chain.schema.json` | fail | Demonstrates rejection when cycle 2 silently starts from a state different from the previous reviewed `next_state`. |
-| `fixtures/valid-decision-transition-cycle-chain-recovery.json` | `schemas/decision-transition-cycle-chain.schema.json` | pass | Demonstrates preserved failure followed by a separate evidence-backed recovery cycle linked with `recovery_of_cycle_id`. |
-| `fixtures/invalid-decision-transition-cycle-chain-recovery-without-evidence.json` | `schemas/decision-transition-cycle-chain.schema.json` | fail | Demonstrates rejection when a recovery cycle claims reviewed closure without recovery evidence. |
+| `fixtures/valid-decision-transition-cycle-chain-recovery.json` | cycle-chain + binding validators | pass | Demonstrates preserved failure followed by an evidence-backed recovery cycle whose `execution_mode` exactly matches the embedded Recovery Decision Matrix action. |
+| `fixtures/invalid-decision-transition-cycle-chain-recovery-without-evidence.json` | cycle-chain validator | fail | Demonstrates rejection when a recovery cycle claims reviewed closure without recovery evidence. |
 | `fixtures/valid-recovery-decision-safe-retry.json` | `schemas/recovery-decision-matrix.schema.json` | pass | Demonstrates SAFE_RETRY backed by a verified idempotency contract. |
 | `fixtures/valid-recovery-decision-rollback.json` | `schemas/recovery-decision-matrix.schema.json` | pass | Demonstrates ROLLBACK with an available, reversible rollback path. |
 | `fixtures/valid-recovery-decision-stop.json` | `schemas/recovery-decision-matrix.schema.json` | pass | Demonstrates conservative STOP when no additional mutation is justified. |
@@ -25,6 +25,8 @@ The fixtures are intentionally small. They are not a full validation suite yet. 
 | `fixtures/invalid-recovery-decision-unsafe-retry.json` | `schemas/recovery-decision-matrix.schema.json` | fail | Rejects SAFE_RETRY when neither idempotency nor reversibility is established. |
 | `fixtures/invalid-recovery-decision-rollback-unavailable.json` | `schemas/recovery-decision-matrix.schema.json` | fail | Rejects ROLLBACK when no rollback path is available. |
 | `fixtures/invalid-recovery-decision-human-escalation-without-trigger.json` | `schemas/recovery-decision-matrix.schema.json` | fail | Rejects HUMAN_ESCALATION when no explicit matching trigger exists. |
+| `fixtures/invalid-recovery-execution-binding-action-mismatch.json` | `scripts/validate-recovery-binding.py` | fail | Matrix selects `SAFE_RETRY` while the recovery cycle declares `ROLLBACK`; execution substitution must be rejected. |
+| `fixtures/invalid-recovery-execution-binding-stop-continued.json` | `scripts/validate-recovery-binding.py` | fail | Matrix selects `STOP` but an active recovery cycle is still created; automated continuation must be rejected. |
 
 ## Validation
 
@@ -32,17 +34,18 @@ Run locally:
 
 ```bash
 python scripts/validate-fixtures.py
+python scripts/validate-recovery-binding.py
 ```
 
-CI runs the same validator on every push to `main` and on every pull request via:
+CI runs both validators on every push to `main` and on every pull request via:
 
 ```text
 .github/workflows/validate-fixtures.yml
 ```
 
-The validator is intentionally minimal and dependency-free.
+The validators are intentionally minimal and dependency-free.
 
-It checks the seed JSON Schema subset used by this repository:
+The main fixture validator checks the seed JSON Schema subset used by this repository:
 
 - file existence,
 - JSON syntax,
@@ -109,12 +112,29 @@ STOP
 
 Every recovery decision also requires a non-empty rationale and at least one evidence reference. Non-escalation actions must not carry an escalation trigger.
 
+The recovery binding validator adds the use-time invariant:
+
+```text
+recovery_decision.source_cycle_id
+== recovery_cycle.recovery_of_cycle_id
+
+recovery_decision.failure_state
+== recovery_cycle.input_state
+== failed_cycle.review.next_state
+
+recovery_decision.selected_action
+== recovery_cycle.execution_mode
+```
+
+`STOP` is terminal for automated recovery: selecting `STOP` and then creating an active recovery cycle is invalid.
+
 See:
 
 - [`docs/closed-loop-recovery.md`](docs/closed-loop-recovery.md) for the failure → recovery walkthrough;
-- [`docs/recovery-decision-matrix.md`](docs/recovery-decision-matrix.md) for the recovery-path gate.
+- [`docs/recovery-decision-matrix.md`](docs/recovery-decision-matrix.md) for the recovery-path gate;
+- [`docs/recovery-execution-binding.md`](docs/recovery-execution-binding.md) for decision → execution fidelity.
 
-The validator does not implement full JSON Schema 2020-12.
+The validators do not implement full JSON Schema 2020-12.
 
 ## Current Scope
 
@@ -129,6 +149,7 @@ This repository currently defines:
 - semantic continuity checks across sequential cycles,
 - explicit recovery provenance across failed and recovered cycles,
 - recovery-action admissibility checks for SAFE_RETRY / ROLLBACK / STOP / HUMAN_ESCALATION,
+- recovery decision → execution binding checks,
 - minimal CI validation for fixtures.
 
 It does not yet define:
