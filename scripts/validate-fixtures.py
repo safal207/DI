@@ -7,7 +7,8 @@ this repository's seed schemas. It uses Python standard library only.
 For the cross-stack Decision & Transition Integrity Envelope, the script also
 checks reference-continuity invariants that JSON Schema alone cannot express.
 For cycle chains, it additionally checks that an observed next state from one
-review becomes the exact starting state of the next cycle.
+review becomes the exact starting state of the next cycle. Recovery cycles may
+also name the exact failed cycle they recover from.
 """
 
 from __future__ import annotations
@@ -68,6 +69,16 @@ CASES = [
     ),
     (
         "fixtures/invalid-decision-transition-cycle-chain-state-mismatch.json",
+        CHAIN_SCHEMA,
+        False,
+    ),
+    (
+        "fixtures/valid-decision-transition-cycle-chain-recovery.json",
+        CHAIN_SCHEMA,
+        True,
+    ),
+    (
+        "fixtures/invalid-decision-transition-cycle-chain-recovery-without-evidence.json",
         CHAIN_SCHEMA,
         False,
     ),
@@ -224,6 +235,8 @@ def validate_cycle_chain_semantics(instance: Any) -> list[str]:
     envelope_schema = load_json(ROOT / ENVELOPE_SCHEMA)
 
     previous_cycle: dict[str, Any] | None = None
+    seen_cycle_ids: set[str] = set()
+
     for index, cycle in enumerate(cycles):
         path = f"$.cycles[{index}]"
         if not isinstance(cycle, dict):
@@ -239,6 +252,7 @@ def validate_cycle_chain_semantics(instance: Any) -> list[str]:
         cycle_id = cycle.get("cycle_id")
         input_state = cycle.get("input_state")
         previous_cycle_id = cycle.get("previous_cycle_id")
+        recovery_of_cycle_id = cycle.get("recovery_of_cycle_id")
         tip = envelope.get("tip")
         review = envelope.get("review")
 
@@ -246,6 +260,11 @@ def validate_cycle_chain_semantics(instance: Any) -> list[str]:
             errors.append(
                 f"{path}.cycle_id: must exactly match {path}.envelope.envelope_id"
             )
+
+        if isinstance(cycle_id, str):
+            if cycle_id in seen_cycle_ids:
+                errors.append(f"{path}.cycle_id: duplicate cycle_id {cycle_id!r}")
+            seen_cycle_ids.add(cycle_id)
 
         if isinstance(tip, dict) and input_state != tip.get("starting_state"):
             errors.append(
@@ -255,6 +274,8 @@ def validate_cycle_chain_semantics(instance: Any) -> list[str]:
         if index == 0:
             if previous_cycle_id != "NONE":
                 errors.append(f"{path}.previous_cycle_id: first cycle must use 'NONE'")
+            if recovery_of_cycle_id is not None:
+                errors.append(f"{path}.recovery_of_cycle_id: first cycle cannot be a recovery cycle")
         elif previous_cycle is not None:
             expected_previous_id = previous_cycle.get("cycle_id")
             if previous_cycle_id != expected_previous_id:
@@ -275,6 +296,16 @@ def validate_cycle_chain_semantics(instance: Any) -> list[str]:
                         errors.append(
                             f"{path}.input_state: must exactly equal previous review.next_state {previous_next_state!r}"
                         )
+
+            if recovery_of_cycle_id is not None:
+                if recovery_of_cycle_id != previous_cycle_id:
+                    errors.append(
+                        f"{path}.recovery_of_cycle_id: recovery must point to the immediately preceding failed cycle {previous_cycle_id!r}"
+                    )
+                if recovery_of_cycle_id not in seen_cycle_ids:
+                    errors.append(
+                        f"{path}.recovery_of_cycle_id: referenced recovery source {recovery_of_cycle_id!r} was not observed earlier in the chain"
+                    )
 
         if isinstance(review, dict) and review.get("status") != "reviewed":
             errors.append(
