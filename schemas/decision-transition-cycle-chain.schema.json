@@ -29,6 +29,7 @@
             "enum": ["SAFE_RETRY", "ROLLBACK", "STOP", "HUMAN_ESCALATION"]
           },
           "recovery_decision": {"type": "object"},
+          "use_time_authority_receipt": {"type": "object"},
           "execution_receipt": {"type": "object"},
           "state_effect_receipt": {"type": "object"},
           "envelope": {"type": "object"}
