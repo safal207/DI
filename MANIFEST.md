@@ -1,8 +1,8 @@
 # DI Fixture Manifest
 
-This manifest lists the seed fixtures used to review the DI schemas, the cross-stack integration envelope, the closed-loop cycle chain, the Recovery Decision Matrix, recovery decision → execution binding, and execution receipts.
+This manifest lists the seed fixtures used to review the DI schemas, the cross-stack integration envelope, the closed-loop cycle chain, the Recovery Decision Matrix, recovery decision → execution binding, execution receipts, and observed state effects.
 
-The fixtures are intentionally small. They are not a full validation suite yet. They provide concrete examples for schema validation, semantic handoff checks, cycle continuity checks, recovery provenance checks, recovery-path admissibility checks, decision-to-execution binding checks, observed-execution receipt checks, CLI checks, and CI integration.
+The fixtures are intentionally small. They are not a full validation suite yet. They provide concrete examples for schema validation, semantic handoff checks, cycle continuity checks, recovery provenance checks, recovery-path admissibility checks, decision-to-execution binding checks, observed-execution receipt checks, state-effect checks, CLI checks, and CI integration.
 
 | Fixture | Schema / Validator | Expected Result | Purpose |
 |---|---|---|---|
@@ -16,7 +16,7 @@ The fixtures are intentionally small. They are not a full validation suite yet. 
 | `fixtures/invalid-decision-transition-envelope-reviewed-without-evidence.json` | `schemas/decision-transition-envelope.schema.json` | fail | Demonstrates that a reviewed transition cannot claim closure without evidence references. |
 | `fixtures/valid-decision-transition-cycle-chain-two-cycles.json` | `schemas/decision-transition-cycle-chain.schema.json` | pass | Demonstrates two reviewed cycles where cycle 1 `next_state` becomes the exact cycle 2 `input_state`. |
 | `fixtures/invalid-decision-transition-cycle-chain-state-mismatch.json` | `schemas/decision-transition-cycle-chain.schema.json` | fail | Demonstrates rejection when cycle 2 silently starts from a state different from the previous reviewed `next_state`. |
-| `fixtures/valid-decision-transition-cycle-chain-recovery.json` | cycle-chain + binding validators | pass | Demonstrates preserved failure followed by an evidence-backed recovery cycle whose Matrix action, declared execution mode, and observed Execution Receipt all agree. |
+| `fixtures/valid-decision-transition-cycle-chain-recovery.json` | cycle-chain + binding validators | pass | Demonstrates preserved failure followed by a recovery cycle whose Matrix action, declared execution mode, observed Execution Receipt, and observed State Effect Receipt all agree. |
 | `fixtures/invalid-decision-transition-cycle-chain-recovery-without-evidence.json` | cycle-chain validator | fail | Demonstrates rejection when a recovery cycle claims reviewed closure without recovery evidence. |
 | `fixtures/valid-recovery-decision-safe-retry.json` | `schemas/recovery-decision-matrix.schema.json` | pass | Demonstrates SAFE_RETRY backed by a verified idempotency contract. |
 | `fixtures/valid-recovery-decision-rollback.json` | `schemas/recovery-decision-matrix.schema.json` | pass | Demonstrates ROLLBACK with an available, reversible rollback path. |
@@ -27,8 +27,10 @@ The fixtures are intentionally small. They are not a full validation suite yet. 
 | `fixtures/invalid-recovery-decision-human-escalation-without-trigger.json` | `schemas/recovery-decision-matrix.schema.json` | fail | Rejects HUMAN_ESCALATION when no explicit matching trigger exists. |
 | `fixtures/invalid-recovery-execution-binding-action-mismatch.json` | `scripts/validate-recovery-binding.py` | fail | Matrix selects `SAFE_RETRY` while the recovery cycle declares `ROLLBACK`; execution substitution must be rejected. |
 | `fixtures/invalid-recovery-execution-binding-stop-continued.json` | `scripts/validate-recovery-binding.py` | fail | Matrix selects `STOP` but an active recovery cycle is still created; automated continuation must be rejected. |
-| `fixtures/invalid-execution-receipt-mode-mismatch.json` | `scripts/validate-recovery-binding.py` | fail | Matrix and cycle declare `SAFE_RETRY`, but the Execution Receipt observes `ROLLBACK`; observed side-effect substitution must be rejected. |
+| `fixtures/invalid-execution-receipt-mode-mismatch.json` | `scripts/validate-recovery-binding.py` | fail | Matrix and cycle declare `SAFE_RETRY`, but the Execution Receipt observes `ROLLBACK`; observed execution substitution must be rejected. |
 | `fixtures/invalid-execution-receipt-without-evidence.json` | `scripts/validate-recovery-binding.py` | fail | Execution Receipt claims an observed action without any evidence reference. |
+| `fixtures/invalid-state-effect-target-mismatch.json` | `scripts/validate-recovery-binding.py` | fail | Execution is observed, but the State Effect Receipt does not observe TIP's target state while Review claims `RECOVERY_CONFIRMED`. |
+| `fixtures/invalid-state-effect-without-evidence.json` | `scripts/validate-recovery-binding.py` | fail | State Effect Receipt claims the target state was observed without any evidence reference. |
 
 ## Validation
 
@@ -129,14 +131,34 @@ recovery_decision.selected_action
 == execution_receipt.declared_execution_mode
 ```
 
-For `execution_status = observed`, it further requires:
+For `execution_status = observed`:
 
 ```text
 execution_receipt.observed_execution_mode
 == execution_receipt.declared_execution_mode
 ```
 
-The receipt must also bind to the exact recovery decision, failed source cycle, and recovery cycle, and it must carry evidence references. `RECOVERY_CONFIRMED` requires an observed receipt.
+Execution alone is not enough. The State Effect Receipt must also bind to the exact execution receipt and TIP target:
+
+```text
+state_effect_receipt.execution_receipt_id
+== execution_receipt.receipt_id
+
+state_effect_receipt.recovery_cycle_id
+== recovery_cycle.cycle_id
+
+state_effect_receipt.expected_target_state
+== recovery_cycle.envelope.tip.target_state
+```
+
+For `effect_status = observed`:
+
+```text
+state_effect_receipt.observed_state
+== recovery_cycle.envelope.tip.target_state
+```
+
+`RECOVERY_CONFIRMED` requires both an observed Execution Receipt and an evidence-backed observed State Effect Receipt matching TIP's target state.
 
 `STOP` is terminal for automated recovery: selecting `STOP` and then creating an active recovery cycle is invalid.
 
@@ -145,7 +167,8 @@ See:
 - [`docs/closed-loop-recovery.md`](docs/closed-loop-recovery.md) for the failure → recovery walkthrough;
 - [`docs/recovery-decision-matrix.md`](docs/recovery-decision-matrix.md) for the recovery-path gate;
 - [`docs/recovery-execution-binding.md`](docs/recovery-execution-binding.md) for decision → execution fidelity;
-- [`docs/execution-receipt.md`](docs/execution-receipt.md) for observed execution evidence.
+- [`docs/execution-receipt.md`](docs/execution-receipt.md) for observed execution evidence;
+- [`docs/state-effect-binding.md`](docs/state-effect-binding.md) for execution → observed state-effect fidelity.
 
 The validators do not implement full JSON Schema 2020-12.
 
@@ -164,6 +187,7 @@ This repository currently defines:
 - recovery-action admissibility checks for SAFE_RETRY / ROLLBACK / STOP / HUMAN_ESCALATION,
 - recovery decision → execution binding checks,
 - execution receipt checks for observed recovery actions,
+- state-effect receipt checks before recovery confirmation,
 - minimal CI validation for fixtures.
 
 It does not yet define:
