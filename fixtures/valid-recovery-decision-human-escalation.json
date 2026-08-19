@@ -1,0 +1,17 @@
+{
+  "matrix_version": "0.1",
+  "decision_id": "recovery.human-escalation.001",
+  "source_cycle_id": "dti.failure.cycle.003",
+  "failure_state": "EXECUTION_STATE_UNKNOWN",
+  "consequence_level": "high",
+  "uncertainty_level": "high",
+  "idempotency_verified": false,
+  "operation_reversible": false,
+  "rollback_available": false,
+  "authority_boundary": true,
+  "policy_requires_human": false,
+  "escalation_trigger": "AUTHORITY_BOUNDARY",
+  "selected_action": "HUMAN_ESCALATION",
+  "rationale": "The next mutation crosses an authority boundary while the execution state remains uncertain.",
+  "evidence_references": ["evidence://authority/boundary-detected", "evidence://state/unknown"]
+}
