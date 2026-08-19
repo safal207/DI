@@ -24,3 +24,6 @@ jobs:
 
       - name: Validate recovery decision execution binding
         run: python scripts/validate-recovery-binding.py
+
+      - name: Validate use-time authority binding
+        run: python scripts/validate-authority-binding.py
