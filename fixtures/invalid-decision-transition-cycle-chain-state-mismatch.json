@@ -1,0 +1,92 @@
+{
+  "chain_version": "0.1",
+  "chain_id": "dti.chain.invalid-state-mismatch.001",
+  "cycles": [
+    {
+      "cycle_id": "dti.payment-recovery.cycle.001",
+      "input_state": "commit_state_unknown",
+      "previous_cycle_id": "NONE",
+      "envelope": {
+        "envelope_version": "0.1",
+        "envelope_id": "dti.payment-recovery.cycle.001",
+        "dif": {
+          "intent_id": "dif.intent.payment-exactly-once.001",
+          "status": "confirmed",
+          "summary": "Ensure one intended payment reaches a correct terminal outcome without an unintended duplicate financial action.",
+          "human_confirmed": true
+        },
+        "di": {
+          "feasibility_id": "di.feasibility.payment-recovery.001",
+          "intent_id": "dif.intent.payment-exactly-once.001",
+          "status": "conditional",
+          "allowed_paths": ["recover or read the existing transaction state"],
+          "blocked_paths": ["issue a new non-idempotent payment while prior commit state is unknown"],
+          "constraints": ["the original commit state is unknown"]
+        },
+        "drp": {
+          "record_id": "drp.payment-recovery.001",
+          "feasibility_id": "di.feasibility.payment-recovery.001",
+          "decision_summary": "Recover the prior operation state before authorizing another financial commit.",
+          "status": "committed"
+        },
+        "tip": {
+          "transition_id": "tip.payment-recovery.001",
+          "decision_record_id": "drp.payment-recovery.001",
+          "starting_state": "commit_state_unknown",
+          "target_state": "established_transaction_state",
+          "action_summary": "Perform the contract-defined recovery or read operation before any new financial commit.",
+          "status": "reviewed"
+        },
+        "review": {
+          "transition_id": "tip.payment-recovery.001",
+          "status": "reviewed",
+          "evidence_references": ["evidence://transaction-lookup/terminal-success"],
+          "next_state": "SUCCESS_CONFIRMED"
+        }
+      }
+    },
+    {
+      "cycle_id": "dti.fulfillment-check.cycle.002",
+      "input_state": "PAYMENT_STILL_UNKNOWN",
+      "previous_cycle_id": "dti.payment-recovery.cycle.001",
+      "envelope": {
+        "envelope_version": "0.1",
+        "envelope_id": "dti.fulfillment-check.cycle.002",
+        "dif": {
+          "intent_id": "dif.intent.post-payment-safe-next-step.002",
+          "status": "confirmed",
+          "summary": "Do not pay again; confirm what safe non-duplicate step follows the already successful payment.",
+          "human_confirmed": true
+        },
+        "di": {
+          "feasibility_id": "di.feasibility.post-payment.002",
+          "intent_id": "dif.intent.post-payment-safe-next-step.002",
+          "status": "feasible",
+          "allowed_paths": ["verify fulfillment or order state using a read-only operation"],
+          "blocked_paths": ["create another payment for the same purchase"],
+          "constraints": ["the prior payment is already confirmed successful"]
+        },
+        "drp": {
+          "record_id": "drp.post-payment.002",
+          "feasibility_id": "di.feasibility.post-payment.002",
+          "decision_summary": "Preserve the successful payment and use a read-only fulfillment check as the next action.",
+          "status": "committed"
+        },
+        "tip": {
+          "transition_id": "tip.fulfillment-check.002",
+          "decision_record_id": "drp.post-payment.002",
+          "starting_state": "PAYMENT_STILL_UNKNOWN",
+          "target_state": "FULFILLMENT_STATUS_ESTABLISHED",
+          "action_summary": "Read the fulfillment or order state without creating another financial action.",
+          "status": "reviewed"
+        },
+        "review": {
+          "transition_id": "tip.fulfillment-check.002",
+          "status": "reviewed",
+          "evidence_references": ["evidence://order-lookup/fulfilled"],
+          "next_state": "FULFILLMENT_CONFIRMED"
+        }
+      }
+    }
+  ]
+}
