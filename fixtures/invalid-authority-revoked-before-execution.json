@@ -1,0 +1,40 @@
+{
+  "chain_version": "0.1",
+  "chain_id": "dti.chain.invalid-authority-revoked.001",
+  "cycles": [
+    {
+      "cycle_id": "dti.failed.cycle.001"
+    },
+    {
+      "cycle_id": "dti.recovery.cycle.002",
+      "recovery_of_cycle_id": "dti.failed.cycle.001",
+      "execution_mode": "SAFE_RETRY",
+      "recovery_decision": {
+        "decision_id": "recovery.auth.002",
+        "selected_action": "SAFE_RETRY",
+        "authority_id": "authority.payment-agent",
+        "authority_generation": 7
+      },
+      "use_time_authority_receipt": {
+        "authority_receipt_version": "0.1",
+        "authority_receipt_id": "authority-receipt.002",
+        "authority_id": "authority.payment-agent",
+        "recovery_decision_id": "recovery.auth.002",
+        "recovery_cycle_id": "dti.recovery.cycle.002",
+        "bound_execution_mode": "SAFE_RETRY",
+        "authority_generation": 7,
+        "authority_status": "active",
+        "checked_at": "2026-08-19T12:29:58+00:00",
+        "revoked_at": "2026-08-19T12:29:59+00:00",
+        "max_binding_age_seconds": 5,
+        "evidence_references": ["evidence://authority/active-at-check", "evidence://authority/revoked"]
+      },
+      "execution_receipt": {
+        "authority_receipt_id": "authority-receipt.002",
+        "authority_generation_at_execution": 7,
+        "authority_status_at_execution": "active",
+        "executed_at": "2026-08-19T12:30:00+00:00"
+      }
+    }
+  ]
+}
