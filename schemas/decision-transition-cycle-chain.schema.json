@@ -30,6 +30,7 @@
           },
           "recovery_decision": {"type": "object"},
           "execution_receipt": {"type": "object"},
+          "state_effect_receipt": {"type": "object"},
           "envelope": {"type": "object"}
         }
       }
