@@ -24,6 +24,11 @@
           "input_state": {"type": "string"},
           "previous_cycle_id": {"type": "string"},
           "recovery_of_cycle_id": {"type": "string"},
+          "execution_mode": {
+            "type": "string",
+            "enum": ["SAFE_RETRY", "ROLLBACK", "STOP", "HUMAN_ESCALATION"]
+          },
+          "recovery_decision": {"type": "object"},
           "envelope": {"type": "object"}
         }
       }
