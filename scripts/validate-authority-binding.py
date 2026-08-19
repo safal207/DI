@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 """Validate use-time authority binding at the execution seam.
 
-A fresh state observation is not sufficient authority to act. This validator
-checks that the authority referenced by a recovery decision is revalidated at
-use time, remains active in the same generation, and is still valid when the
-bound execution occurs.
+A fresh state observation is not sufficient authority to mutate state. This
+validator checks that authority referenced by automated SAFE_RETRY / ROLLBACK is
+revalidated at use time, remains active in the same generation, and is still
+valid when the bound execution occurs.
+
+HUMAN_ESCALATION is intentionally not blocked by revoked execution authority:
+escalation is the safe exit when automated authority is absent or uncertain.
 """
 
 from __future__ import annotations
@@ -72,11 +75,14 @@ def validate_authority_binding(instance: Any) -> list[str]:
             errors.append(f"{path}.recovery_decision: required for an active recovery cycle")
             continue
 
-        if decision.get("selected_action") == "STOP":
+        selected_action = decision.get("selected_action")
+        if selected_action == "STOP":
+            continue
+        if selected_action not in {"SAFE_RETRY", "ROLLBACK"}:
             continue
 
         if not isinstance(authority, dict):
-            errors.append(f"{path}.use_time_authority_receipt: required before active execution")
+            errors.append(f"{path}.use_time_authority_receipt: required before automated state mutation")
             continue
         if not isinstance(execution, dict):
             errors.append(f"{path}.execution_receipt: required for authority/use-time validation")
@@ -87,7 +93,7 @@ def validate_authority_binding(instance: Any) -> list[str]:
         authority_generation = decision.get("authority_generation")
 
         if not isinstance(authority_id, str) or not authority_id:
-            errors.append(f"{path}.recovery_decision.authority_id: active execution requires an authority identity")
+            errors.append(f"{path}.recovery_decision.authority_id: automated execution requires an authority identity")
         if not isinstance(authority_generation, int) or isinstance(authority_generation, bool) or authority_generation < 0:
             errors.append(f"{path}.recovery_decision.authority_generation: non-negative integer is required")
 
@@ -108,7 +114,7 @@ def validate_authority_binding(instance: Any) -> list[str]:
 
         status = authority.get("authority_status")
         if status != "active":
-            errors.append(f"{path}.use_time_authority_receipt.authority_status: active execution requires status='active', got {status!r}")
+            errors.append(f"{path}.use_time_authority_receipt.authority_status: automated execution requires status='active', got {status!r}")
 
         evidence = authority.get("evidence_references")
         if not isinstance(evidence, list) or not evidence:
@@ -144,7 +150,7 @@ def validate_authority_binding(instance: Any) -> list[str]:
                 f"{path}.execution_receipt.authority_generation_at_execution: must exactly match decision/use-time generation {authority_generation!r}"
             )
         if execution.get("authority_status_at_execution") != "active":
-            errors.append(f"{path}.execution_receipt.authority_status_at_execution: execution requires active authority")
+            errors.append(f"{path}.execution_receipt.authority_status_at_execution: automated execution requires active authority")
 
     return errors
 
