@@ -1,0 +1,17 @@
+{
+  "matrix_version": "0.1",
+  "decision_id": "recovery.safe-retry.001",
+  "source_cycle_id": "dti.failure.cycle.003",
+  "failure_state": "EXECUTION_FAILED_CONFIRMED",
+  "consequence_level": "medium",
+  "uncertainty_level": "low",
+  "idempotency_verified": true,
+  "operation_reversible": false,
+  "rollback_available": false,
+  "authority_boundary": false,
+  "policy_requires_human": false,
+  "escalation_trigger": "NONE",
+  "selected_action": "SAFE_RETRY",
+  "rationale": "Retry uses a verified idempotency contract and does not cross an authority boundary.",
+  "evidence_references": ["evidence://contract/idempotency-verified"]
+}
