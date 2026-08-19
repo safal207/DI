@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/safal207/DI/schemas/authority-use-receipt.schema.json",
+  "title": "Authority Use Receipt v0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "authority_version",
+    "authority_receipt_id",
+    "recovery_decision_id",
+    "recovery_cycle_id",
+    "execution_receipt_id",
+    "authority_id",
+    "authority_epoch",
+    "authority_status",
+    "checked_at",
+    "binding_mode",
+    "evidence_references"
+  ],
+  "properties": {
+    "authority_version": {"type": "string", "enum": ["0.1"]},
+    "authority_receipt_id": {"type": "string"},
+    "recovery_decision_id": {"type": "string"},
+    "recovery_cycle_id": {"type": "string"},
+    "execution_receipt_id": {"type": "string"},
+    "authority_id": {"type": "string"},
+    "authority_epoch": {"type": "integer"},
+    "authority_status": {
+      "type": "string",
+      "enum": ["active", "revoked", "unknown"]
+    },
+    "checked_at": {"type": "string"},
+    "binding_mode": {
+      "type": "string",
+      "enum": ["atomic", "external"]
+    },
+    "evidence_references": {
+      "type": "array",
+      "items": {"type": "string"}
+    }
+  }
+}
