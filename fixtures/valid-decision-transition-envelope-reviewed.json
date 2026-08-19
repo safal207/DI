@@ -1,0 +1,47 @@
+{
+  "envelope_version": "0.1",
+  "envelope_id": "dti.payment-recovery.reviewed.001",
+  "dif": {
+    "intent_id": "dif.intent.payment-exactly-once",
+    "status": "confirmed",
+    "summary": "Ensure the intended payment reaches one correct terminal outcome without an unintended duplicate financial action.",
+    "human_confirmed": true
+  },
+  "di": {
+    "feasibility_id": "di.feasibility.payment-recovery",
+    "intent_id": "dif.intent.payment-exactly-once",
+    "status": "conditional",
+    "allowed_paths": [
+      "recover or read the existing transaction state"
+    ],
+    "blocked_paths": [
+      "blindly issue a new non-idempotent payment while prior commit state is unknown"
+    ],
+    "constraints": [
+      "the original commit state is unknown"
+    ]
+  },
+  "drp": {
+    "record_id": "drp.payment-recovery.001",
+    "feasibility_id": "di.feasibility.payment-recovery",
+    "decision_summary": "Recover prior operation state before authorizing another financial commit.",
+    "status": "committed"
+  },
+  "tip": {
+    "transition_id": "tip.payment-recovery.001",
+    "decision_record_id": "drp.payment-recovery.001",
+    "starting_state": "commit_state_unknown",
+    "target_state": "established_transaction_state",
+    "action_summary": "Perform the contract-defined recovery or read operation before any new financial commit.",
+    "status": "reviewed"
+  },
+  "review": {
+    "transition_id": "tip.payment-recovery.001",
+    "status": "reviewed",
+    "evidence_references": [
+      "evidence://transaction-lookup/terminal-success",
+      "evidence://settlement/transaction-id"
+    ],
+    "next_state": "SUCCESS_CONFIRMED"
+  }
+}
