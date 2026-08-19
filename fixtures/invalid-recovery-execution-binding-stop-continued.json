@@ -1,0 +1,111 @@
+{
+  "chain_version": "0.1",
+  "chain_id": "dti.chain.recovery-binding.stop-continued.001",
+  "cycles": [
+    {
+      "cycle_id": "dti.high-risk-failure.cycle.001",
+      "input_state": "READY_TO_EXECUTE",
+      "previous_cycle_id": "NONE",
+      "envelope": {
+        "envelope_version": "0.1",
+        "envelope_id": "dti.high-risk-failure.cycle.001",
+        "dif": {
+          "intent_id": "dif.intent.execute-bounded.001",
+          "status": "confirmed",
+          "summary": "Attempt the bounded action once and preserve its observed result.",
+          "human_confirmed": true
+        },
+        "di": {
+          "feasibility_id": "di.feasibility.execute-bounded.001",
+          "intent_id": "dif.intent.execute-bounded.001",
+          "status": "conditional",
+          "allowed_paths": ["attempt once inside the approved boundary"],
+          "blocked_paths": ["continue after an unrecoverable failure"],
+          "constraints": ["no safe automated recovery is known"]
+        },
+        "drp": {
+          "record_id": "drp.execute-bounded.001",
+          "feasibility_id": "di.feasibility.execute-bounded.001",
+          "decision_summary": "Attempt once and stop on confirmed unrecoverable failure.",
+          "status": "committed"
+        },
+        "tip": {
+          "transition_id": "tip.execute-bounded.001",
+          "decision_record_id": "drp.execute-bounded.001",
+          "starting_state": "READY_TO_EXECUTE",
+          "target_state": "EXECUTION_SUCCEEDED",
+          "action_summary": "Attempt the bounded action once.",
+          "status": "reviewed"
+        },
+        "review": {
+          "transition_id": "tip.execute-bounded.001",
+          "status": "reviewed",
+          "evidence_references": ["evidence://executor/failure-terminal"],
+          "next_state": "EXECUTION_FAILED_CONFIRMED"
+        }
+      }
+    },
+    {
+      "cycle_id": "dti.illegal-continuation.cycle.002",
+      "input_state": "EXECUTION_FAILED_CONFIRMED",
+      "previous_cycle_id": "dti.high-risk-failure.cycle.001",
+      "recovery_of_cycle_id": "dti.high-risk-failure.cycle.001",
+      "execution_mode": "STOP",
+      "recovery_decision": {
+        "matrix_version": "0.1",
+        "decision_id": "recovery.stop.002",
+        "source_cycle_id": "dti.high-risk-failure.cycle.001",
+        "failure_state": "EXECUTION_FAILED_CONFIRMED",
+        "consequence_level": "medium",
+        "uncertainty_level": "medium",
+        "idempotency_verified": false,
+        "operation_reversible": false,
+        "rollback_available": false,
+        "authority_boundary": false,
+        "policy_requires_human": false,
+        "escalation_trigger": "NONE",
+        "selected_action": "STOP",
+        "rationale": "No safe retry or rollback path is established; preserve the failed state and perform no further automated recovery action.",
+        "evidence_references": ["evidence://recovery/no-safe-path"]
+      },
+      "envelope": {
+        "envelope_version": "0.1",
+        "envelope_id": "dti.illegal-continuation.cycle.002",
+        "dif": {
+          "intent_id": "dif.intent.illegal-continue.002",
+          "status": "confirmed",
+          "summary": "Continue despite the stop decision.",
+          "human_confirmed": true
+        },
+        "di": {
+          "feasibility_id": "di.feasibility.illegal-continue.002",
+          "intent_id": "dif.intent.illegal-continue.002",
+          "status": "conditional",
+          "allowed_paths": ["no automated recovery"],
+          "blocked_paths": ["perform another automated action"],
+          "constraints": ["matrix selected STOP"]
+        },
+        "drp": {
+          "record_id": "drp.illegal-continue.002",
+          "feasibility_id": "di.feasibility.illegal-continue.002",
+          "decision_summary": "No automated action should occur.",
+          "status": "committed"
+        },
+        "tip": {
+          "transition_id": "tip.illegal-continue.002",
+          "decision_record_id": "drp.illegal-continue.002",
+          "starting_state": "EXECUTION_FAILED_CONFIRMED",
+          "target_state": "UNCHANGED",
+          "action_summary": "This cycle should not exist after STOP.",
+          "status": "reviewed"
+        },
+        "review": {
+          "transition_id": "tip.illegal-continue.002",
+          "status": "reviewed",
+          "evidence_references": ["evidence://invalid/continued-after-stop"],
+          "next_state": "UNCHANGED"
+        }
+      }
+    }
+  ]
+}
