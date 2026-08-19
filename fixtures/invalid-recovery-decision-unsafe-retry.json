@@ -1,0 +1,17 @@
+{
+  "matrix_version": "0.1",
+  "decision_id": "recovery.unsafe-retry.001",
+  "source_cycle_id": "dti.failure.cycle.003",
+  "failure_state": "EXECUTION_FAILED_CONFIRMED",
+  "consequence_level": "medium",
+  "uncertainty_level": "medium",
+  "idempotency_verified": false,
+  "operation_reversible": false,
+  "rollback_available": false,
+  "authority_boundary": false,
+  "policy_requires_human": false,
+  "escalation_trigger": "NONE",
+  "selected_action": "SAFE_RETRY",
+  "rationale": "Retry requested without a verified idempotency or reversibility guarantee.",
+  "evidence_references": ["evidence://failure/terminal-confirmed"]
+}
