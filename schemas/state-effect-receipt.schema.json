@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/safal207/DI/schemas/state-effect-receipt.schema.json",
+  "title": "Recovery State Effect Receipt v0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "effect_version",
+    "effect_id",
+    "execution_receipt_id",
+    "recovery_cycle_id",
+    "expected_target_state",
+    "observed_state",
+    "effect_status",
+    "evidence_references"
+  ],
+  "properties": {
+    "effect_version": {"type": "string", "enum": ["0.1"]},
+    "effect_id": {"type": "string"},
+    "execution_receipt_id": {"type": "string"},
+    "recovery_cycle_id": {"type": "string"},
+    "expected_target_state": {"type": "string"},
+    "observed_state": {"type": "string"},
+    "effect_status": {
+      "type": "string",
+      "enum": ["observed", "failed", "unknown"]
+    },
+    "evidence_references": {
+      "type": "array",
+      "items": {"type": "string"}
+    }
+  }
+}
