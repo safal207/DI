@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 """Validate recovery decision -> execution -> observed state effect binding.
 
-This validator is intentionally narrow. It checks that a recovery decision made
-for a failed cycle is the same recovery mode the next cycle declares, the same
-mode an Execution Receipt says was actually observed, and that the resulting
-state effect is evidence-backed before recovery is called confirmed.
+This validator checks that a recovery decision is faithfully executed, that the
+execution produces the claimed state effect, and that evidence accepted by a
+review is fresh for the state generation being reviewed.
 
 It does not redefine DIF, DI, DRP, or TIP semantics.
 """
@@ -12,6 +11,7 @@ It does not redefine DIF, DI, DRP, or TIP semantics.
 from __future__ import annotations
 
 import json
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -25,12 +25,29 @@ CASES = [
     ("fixtures/invalid-execution-receipt-without-evidence.json", False),
     ("fixtures/invalid-state-effect-target-mismatch.json", False),
     ("fixtures/invalid-state-effect-without-evidence.json", False),
+    ("fixtures/invalid-state-effect-stale-generation.json", False),
+    ("fixtures/invalid-state-effect-stale-time.json", False),
 ]
 
 
 def load_json(path: Path) -> Any:
     with path.open("r", encoding="utf-8") as handle:
         return json.load(handle)
+
+
+def parse_timestamp(value: Any, path: str, errors: list[str]) -> datetime | None:
+    if not isinstance(value, str) or not value.strip():
+        errors.append(f"{path}: RFC3339 timestamp is required")
+        return None
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        errors.append(f"{path}: invalid RFC3339/ISO-8601 timestamp {value!r}")
+        return None
+    if parsed.tzinfo is None:
+        errors.append(f"{path}: timestamp must include a timezone offset")
+        return None
+    return parsed.astimezone(timezone.utc)
 
 
 def validate_matrix(decision: dict[str, Any], path: str) -> list[str]:
@@ -84,8 +101,6 @@ def validate_execution_receipt(
     recovery_of: Any,
     execution_mode: Any,
 ) -> list[str]:
-    """Validate that observed execution is faithful to the selected recovery action."""
-
     errors: list[str] = []
     if receipt.get("receipt_version") != "0.1":
         errors.append(f"{path}.receipt_version: expected '0.1'")
@@ -109,24 +124,18 @@ def validate_execution_receipt(
         errors.append(f"{path}.declared_execution_mode: must exactly match recovery cycle execution_mode")
     if declared != selected:
         errors.append(f"{path}.declared_execution_mode: must exactly match matrix selected_action")
-
     if status not in {"observed", "failed", "unknown"}:
         errors.append(f"{path}.execution_status: unsupported status {status!r}")
-
     if not isinstance(evidence, list) or not evidence:
         errors.append(f"{path}.evidence_references: execution receipt requires at least one evidence reference")
 
     if status == "observed":
         if observed != declared:
-            errors.append(
-                f"{path}.observed_execution_mode: {observed!r} must exactly match declared execution mode {declared!r}"
-            )
+            errors.append(f"{path}.observed_execution_mode: {observed!r} must exactly match declared execution mode {declared!r}")
         if observed == "UNKNOWN":
             errors.append(f"{path}.observed_execution_mode: observed receipt cannot claim UNKNOWN execution mode")
     elif observed not in {declared, "UNKNOWN"}:
-        errors.append(
-            f"{path}.observed_execution_mode: failed/unknown receipt may only preserve the declared mode or UNKNOWN"
-        )
+        errors.append(f"{path}.observed_execution_mode: failed/unknown receipt may only preserve the declared mode or UNKNOWN")
 
     return errors
 
@@ -138,8 +147,6 @@ def validate_state_effect_receipt(
     receipt: dict[str, Any],
     cycle: dict[str, Any],
 ) -> list[str]:
-    """Validate that the observed execution produced the state effect claimed by review."""
-
     errors: list[str] = []
 
     if effect.get("effect_version") != "0.1":
@@ -154,7 +161,11 @@ def validate_state_effect_receipt(
     status = effect.get("effect_status")
     observed_state = effect.get("observed_state")
     evidence = effect.get("evidence_references")
+    observed_at = parse_timestamp(effect.get("observed_at"), f"{path}.observed_at", errors)
+    generation = effect.get("state_generation")
 
+    if not isinstance(generation, int) or isinstance(generation, bool) or generation < 0:
+        errors.append(f"{path}.state_generation: non-negative integer is required")
     if status not in {"observed", "failed", "unknown"}:
         errors.append(f"{path}.effect_status: unsupported status {status!r}")
     if not isinstance(evidence, list) or not evidence:
@@ -178,18 +189,37 @@ def validate_state_effect_receipt(
         if receipt.get("execution_status") != "observed":
             errors.append(f"{path}.effect_status: observed effect requires an observed Execution Receipt")
         if observed_state != target_state:
+            errors.append(f"{path}.observed_state: {observed_state!r} must exactly match target state {target_state!r} when effect_status='observed'")
+
+    if isinstance(review, dict) and review.get("status") == "reviewed" and review.get("next_state") == "RECOVERY_CONFIRMED":
+        if status != "observed":
+            errors.append(f"{path}.effect_status: RECOVERY_CONFIRMED requires an observed state effect")
+        if observed_state != target_state:
+            errors.append(f"{path}.observed_state: RECOVERY_CONFIRMED requires the target state to be actually observed")
+
+        accepted_generation = review.get("accepted_state_generation")
+        max_age = review.get("max_evidence_age_seconds")
+        reviewed_at = parse_timestamp(review.get("reviewed_at"), f"{path}.review.reviewed_at", errors)
+
+        if not isinstance(accepted_generation, int) or isinstance(accepted_generation, bool) or accepted_generation < 0:
+            errors.append(f"{path}.review.accepted_state_generation: non-negative integer is required for RECOVERY_CONFIRMED")
+        elif generation != accepted_generation:
             errors.append(
-                f"{path}.observed_state: {observed_state!r} must exactly match target state {target_state!r} when effect_status='observed'"
+                f"{path}.state_generation: evidence generation {generation!r} must exactly match review accepted generation {accepted_generation!r}"
             )
 
-    if isinstance(review, dict) and review.get("status") == "reviewed":
-        if review.get("next_state") == "RECOVERY_CONFIRMED":
-            if status != "observed":
-                errors.append(f"{path}.effect_status: RECOVERY_CONFIRMED requires an observed state effect")
-            if observed_state != target_state:
-                errors.append(
-                    f"{path}.observed_state: RECOVERY_CONFIRMED requires the target state to be actually observed"
-                )
+        if not isinstance(max_age, int) or isinstance(max_age, bool) or max_age < 0:
+            errors.append(f"{path}.review.max_evidence_age_seconds: non-negative integer is required for RECOVERY_CONFIRMED")
+
+        if observed_at is not None and reviewed_at is not None:
+            if observed_at > reviewed_at:
+                errors.append(f"{path}.observed_at: evidence observation cannot occur after review acceptance")
+            elif isinstance(max_age, int) and not isinstance(max_age, bool) and max_age >= 0:
+                age_seconds = (reviewed_at - observed_at).total_seconds()
+                if age_seconds > max_age:
+                    errors.append(
+                        f"{path}.observed_at: evidence age {age_seconds:.0f}s exceeds review freshness window {max_age}s"
+                    )
 
     return errors
 
@@ -249,16 +279,13 @@ def validate_binding(instance: Any) -> list[str]:
                 previous_next_state = previous_review.get("next_state")
 
         if cycle.get("input_state") != previous_next_state:
-            errors.append(
-                f"{path}.input_state: must equal the failed cycle's observed next_state {previous_next_state!r}"
-            )
+            errors.append(f"{path}.input_state: must equal the failed cycle's observed next_state {previous_next_state!r}")
 
         if not isinstance(decision, dict):
             errors.append(f"{path}.recovery_decision: recovery cycle requires an embedded Recovery Decision Matrix record")
             continue
 
         errors.extend(validate_matrix(decision, f"{path}.recovery_decision"))
-
         if decision.get("source_cycle_id") != recovery_of:
             errors.append(f"{path}.recovery_decision.source_cycle_id: must equal recovery_of_cycle_id")
         if decision.get("failure_state") != cycle.get("input_state"):
@@ -266,47 +293,35 @@ def validate_binding(instance: Any) -> list[str]:
 
         selected_action = decision.get("selected_action")
         if execution_mode != selected_action:
-            errors.append(
-                f"{path}.execution_mode: {execution_mode!r} must exactly match matrix selected_action {selected_action!r}"
-            )
+            errors.append(f"{path}.execution_mode: {execution_mode!r} must exactly match matrix selected_action {selected_action!r}")
 
         if selected_action == "STOP":
-            errors.append(
-                f"{path}: STOP forbids creation of an active automated recovery cycle; preserve the failed state instead"
-            )
+            errors.append(f"{path}: STOP forbids creation of an active automated recovery cycle; preserve the failed state instead")
             continue
 
         if not isinstance(receipt, dict):
-            errors.append(
-                f"{path}.execution_receipt: active recovery cycle requires an Execution Receipt proving observed execution"
-            )
+            errors.append(f"{path}.execution_receipt: active recovery cycle requires an Execution Receipt proving observed execution")
             continue
 
-        errors.extend(
-            validate_execution_receipt(
-                receipt,
-                path=f"{path}.execution_receipt",
-                decision=decision,
-                cycle=cycle,
-                recovery_of=recovery_of,
-                execution_mode=execution_mode,
-            )
-        )
+        errors.extend(validate_execution_receipt(
+            receipt,
+            path=f"{path}.execution_receipt",
+            decision=decision,
+            cycle=cycle,
+            recovery_of=recovery_of,
+            execution_mode=execution_mode,
+        ))
 
         if not isinstance(effect, dict):
-            errors.append(
-                f"{path}.state_effect_receipt: active recovery cycle requires a State Effect Receipt proving the resulting state"
-            )
+            errors.append(f"{path}.state_effect_receipt: active recovery cycle requires a State Effect Receipt proving the resulting state")
             continue
 
-        errors.extend(
-            validate_state_effect_receipt(
-                effect,
-                path=f"{path}.state_effect_receipt",
-                receipt=receipt,
-                cycle=cycle,
-            )
-        )
+        errors.extend(validate_state_effect_receipt(
+            effect,
+            path=f"{path}.state_effect_receipt",
+            receipt=receipt,
+            cycle=cycle,
+        ))
 
     return errors
 
