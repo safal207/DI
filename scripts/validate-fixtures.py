@@ -9,6 +9,9 @@ checks reference-continuity invariants that JSON Schema alone cannot express.
 For cycle chains, it additionally checks that an observed next state from one
 review becomes the exact starting state of the next cycle. Recovery cycles may
 also name the exact failed cycle they recover from.
+
+For the Recovery Decision Matrix, the script validates that a selected recovery
+action is justified by the evidence and safety conditions carried by the record.
 """
 
 from __future__ import annotations
@@ -20,6 +23,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 ENVELOPE_SCHEMA = "schemas/decision-transition-envelope.schema.json"
 CHAIN_SCHEMA = "schemas/decision-transition-cycle-chain.schema.json"
+MATRIX_SCHEMA = "schemas/recovery-decision-matrix.schema.json"
 
 CASES = [
     (
@@ -80,6 +84,41 @@ CASES = [
     (
         "fixtures/invalid-decision-transition-cycle-chain-recovery-without-evidence.json",
         CHAIN_SCHEMA,
+        False,
+    ),
+    (
+        "fixtures/valid-recovery-decision-safe-retry.json",
+        MATRIX_SCHEMA,
+        True,
+    ),
+    (
+        "fixtures/valid-recovery-decision-rollback.json",
+        MATRIX_SCHEMA,
+        True,
+    ),
+    (
+        "fixtures/valid-recovery-decision-stop.json",
+        MATRIX_SCHEMA,
+        True,
+    ),
+    (
+        "fixtures/valid-recovery-decision-human-escalation.json",
+        MATRIX_SCHEMA,
+        True,
+    ),
+    (
+        "fixtures/invalid-recovery-decision-unsafe-retry.json",
+        MATRIX_SCHEMA,
+        False,
+    ),
+    (
+        "fixtures/invalid-recovery-decision-rollback-unavailable.json",
+        MATRIX_SCHEMA,
+        False,
+    ),
+    (
+        "fixtures/invalid-recovery-decision-human-escalation-without-trigger.json",
+        MATRIX_SCHEMA,
         False,
     ),
 ]
@@ -317,6 +356,76 @@ def validate_cycle_chain_semantics(instance: Any) -> list[str]:
     return errors
 
 
+def validate_recovery_matrix_semantics(instance: Any) -> list[str]:
+    """Validate that the selected recovery action is justified by known conditions."""
+
+    if not isinstance(instance, dict):
+        return ["$: recovery decision matrix must be an object"]
+
+    errors: list[str] = []
+    action = instance.get("selected_action")
+    evidence = instance.get("evidence_references")
+    trigger = instance.get("escalation_trigger")
+
+    if not isinstance(instance.get("rationale"), str) or not instance.get("rationale", "").strip():
+        errors.append("$.rationale: recovery decision requires a non-empty rationale")
+
+    if not isinstance(evidence, list) or not evidence:
+        errors.append("$.evidence_references: recovery decision requires at least one evidence reference")
+
+    if action == "SAFE_RETRY":
+        has_retry_safety = (
+            instance.get("idempotency_verified") is True
+            or instance.get("operation_reversible") is True
+        )
+        if not has_retry_safety:
+            errors.append(
+                "$.selected_action: SAFE_RETRY requires verified idempotency or a reversible operation"
+            )
+        if instance.get("uncertainty_level") == "high":
+            errors.append(
+                "$.selected_action: SAFE_RETRY is not allowed while uncertainty remains high"
+            )
+        if instance.get("consequence_level") == "high":
+            errors.append(
+                "$.selected_action: SAFE_RETRY is not allowed for high-consequence recovery without escalation"
+            )
+
+    elif action == "ROLLBACK":
+        if instance.get("rollback_available") is not True:
+            errors.append(
+                "$.selected_action: ROLLBACK requires an available rollback path"
+            )
+        if instance.get("operation_reversible") is not True:
+            errors.append(
+                "$.selected_action: ROLLBACK requires the operation to be classified as reversible"
+            )
+
+    elif action == "HUMAN_ESCALATION":
+        if trigger == "NONE":
+            errors.append(
+                "$.escalation_trigger: HUMAN_ESCALATION requires an explicit escalation trigger"
+            )
+
+        trigger_matches = {
+            "HIGH_CONSEQUENCE": instance.get("consequence_level") == "high",
+            "CRITICAL_UNKNOWN": instance.get("uncertainty_level") == "high",
+            "AUTHORITY_BOUNDARY": instance.get("authority_boundary") is True,
+            "POLICY_REQUIRES_HUMAN": instance.get("policy_requires_human") is True,
+        }
+        if trigger in trigger_matches and not trigger_matches[trigger]:
+            errors.append(
+                f"$.escalation_trigger: {trigger} does not match the recorded recovery conditions"
+            )
+
+    if action != "HUMAN_ESCALATION" and trigger != "NONE":
+        errors.append(
+            "$.escalation_trigger: non-escalation recovery actions must use escalation_trigger='NONE'"
+        )
+
+    return errors
+
+
 def run_case(fixture_rel: str, schema_rel: str, expected_pass: bool) -> bool:
     fixture_path = ROOT / fixture_rel
     schema_path = ROOT / schema_rel
@@ -329,6 +438,8 @@ def run_case(fixture_rel: str, schema_rel: str, expected_pass: bool) -> bool:
             errors.extend(validate_envelope_semantics(fixture))
         elif schema_rel == CHAIN_SCHEMA:
             errors.extend(validate_cycle_chain_semantics(fixture))
+        elif schema_rel == MATRIX_SCHEMA:
+            errors.extend(validate_recovery_matrix_semantics(fixture))
     except ValueError as exc:
         errors = [str(exc)]
 
