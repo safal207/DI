@@ -48,6 +48,8 @@ recovery_cycle_id
 expected_target_state
 observed_state
 effect_status
+observed_at
+state_generation
 evidence_references
 ```
 
@@ -79,9 +81,53 @@ state_effect_receipt.observed_state
 
 An observed state effect also requires an observed Execution Receipt and evidence references.
 
+## Evidence freshness
+
+Correct evidence can still be stale.
+
+A Review that closes recovery declares which state generation it is accepting and how old evidence is allowed to be:
+
+```text
+review.accepted_state_generation
+review.reviewed_at
+review.max_evidence_age_seconds
+```
+
+The State Effect Receipt records:
+
+```text
+state_effect_receipt.state_generation
+state_effect_receipt.observed_at
+```
+
+For `RECOVERY_CONFIRMED`:
+
+```text
+state_effect_receipt.state_generation
+== review.accepted_state_generation
+
+state_effect_receipt.observed_at
+<= review.reviewed_at
+
+review.reviewed_at - state_effect_receipt.observed_at
+<= review.max_evidence_age_seconds
+```
+
+This rejects two different stale-evidence failures:
+
+```text
+old generation, recent timestamp
+→ reject
+
+correct generation, expired timestamp
+→ reject
+```
+
+The freshness window is chosen by the consuming Review. The evidence producer cannot declare its own evidence fresh.
+
 ## Recovery confirmation rule
 
-`RECOVERY_CONFIRMED` is only valid when both execution and effect are observed:
+`RECOVERY_CONFIRMED` is only valid when execution, state effect, and freshness are all established:
 
 ```text
 Execution Receipt.execution_status == observed
@@ -89,19 +135,24 @@ AND
 State Effect Receipt.effect_status == observed
 AND
 State Effect Receipt.observed_state == TIP.target_state
+AND
+State Effect Receipt.state_generation == Review.accepted_state_generation
+AND
+State Effect Receipt is inside Review.max_evidence_age_seconds
 ```
 
 So this is invalid:
 
 ```text
 execution: observed
-state effect: failed / unknown / wrong state
+state effect: target matched once
+but evidence belongs to an older generation or expired freshness window
 review.next_state: RECOVERY_CONFIRMED
 ```
 
 ## Why this matters
 
-This closes a distinct failure surface:
+This closes two distinct failure surfaces:
 
 ```text
 Decision was correct
@@ -110,7 +161,16 @@ Decision was correct
 → BUT expected effect did not happen
 ```
 
-The system must preserve that difference instead of collapsing it into success.
+and:
+
+```text
+Expected effect was observed earlier
+→ world changed
+→ old evidence reused
+→ false claim about current state
+```
+
+The system must preserve those differences instead of collapsing them into success.
 
 ## End-to-end integrity line
 
@@ -123,6 +183,7 @@ Intent
 → Declared Execution
 → Observed Execution
 → Observed State Effect
+→ Freshness / Generation Check
 → Review
 → Next State
 ```
