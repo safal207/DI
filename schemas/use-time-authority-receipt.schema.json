@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/safal207/DI/schemas/use-time-authority-receipt.schema.json",
+  "title": "Use-Time Authority Receipt v0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "authority_receipt_version",
+    "authority_receipt_id",
+    "authority_id",
+    "recovery_decision_id",
+    "recovery_cycle_id",
+    "bound_execution_mode",
+    "authority_generation",
+    "authority_status",
+    "checked_at",
+    "max_binding_age_seconds",
+    "evidence_references"
+  ],
+  "properties": {
+    "authority_receipt_version": {"type": "string", "enum": ["0.1"]},
+    "authority_receipt_id": {"type": "string"},
+    "authority_id": {"type": "string"},
+    "recovery_decision_id": {"type": "string"},
+    "recovery_cycle_id": {"type": "string"},
+    "bound_execution_mode": {
+      "type": "string",
+      "enum": ["SAFE_RETRY", "ROLLBACK", "HUMAN_ESCALATION"]
+    },
+    "authority_generation": {"type": "integer"},
+    "authority_status": {
+      "type": "string",
+      "enum": ["active", "revoked", "unknown"]
+    },
+    "checked_at": {"type": "string"},
+    "revoked_at": {"type": "string"},
+    "max_binding_age_seconds": {"type": "integer"},
+    "evidence_references": {
+      "type": "array",
+      "items": {"type": "string"}
+    }
+  }
+}
