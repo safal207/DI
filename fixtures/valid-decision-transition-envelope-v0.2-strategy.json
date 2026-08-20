@@ -1,0 +1,78 @@
+{
+  "envelope_version": "0.2",
+  "envelope_id": "dti.payment-recovery.strategy.001",
+  "dif": {
+    "intent_id": "dif.intent.payment-exactly-once.001",
+    "status": "confirmed",
+    "summary": "Ensure one intended payment reaches a correct terminal outcome without an unintended duplicate financial action.",
+    "human_confirmed": true
+  },
+  "di": {
+    "feasibility_id": "di.feasibility.payment-recovery.001",
+    "intent_id": "dif.intent.payment-exactly-once.001",
+    "status": "conditional",
+    "feasible_paths": [
+      {
+        "path_id": "path.A.read-existing",
+        "summary": "Read or recover the existing transaction state before another financial mutation.",
+        "requirements": ["authoritative transaction lookup is available"],
+        "risks": ["terminal state may not yet be available"],
+        "cost_class": "low",
+        "reversibility": "reversible"
+      },
+      {
+        "path_id": "path.B.idempotent-replay",
+        "summary": "Replay the original request only through a verified idempotency contract.",
+        "requirements": ["idempotency key semantics are verified for this operation"],
+        "risks": ["incorrect idempotency scope could create a second financial action"],
+        "cost_class": "medium",
+        "reversibility": "partially_reversible"
+      },
+      {
+        "path_id": "path.C.wait-for-evidence",
+        "summary": "Wait for stronger terminal evidence before choosing another mutation.",
+        "requirements": ["later settlement or terminal evidence is expected"],
+        "risks": ["completion is delayed"],
+        "cost_class": "low",
+        "reversibility": "reversible"
+      }
+    ],
+    "blocked_paths": ["blind non-idempotent replay while commit state is unknown"],
+    "constraints": ["the original payment commit state is currently ambiguous"]
+  },
+  "strategy": {
+    "strategy_id": "strategy.payment-recovery.001",
+    "feasibility_id": "di.feasibility.payment-recovery.001",
+    "candidate_path_ids": [
+      "path.A.read-existing",
+      "path.B.idempotent-replay",
+      "path.C.wait-for-evidence"
+    ],
+    "comparison_dimensions": ["duplicate-risk", "latency", "reversibility", "evidence-strength"],
+    "recommended_path_id": "path.B.idempotent-replay",
+    "rationale": "Use the verified idempotent replay because it preserves the original operation identity while avoiding a blind second commit."
+  },
+  "drp": {
+    "record_id": "drp.payment-recovery.001",
+    "feasibility_id": "di.feasibility.payment-recovery.001",
+    "strategy_id": "strategy.payment-recovery.001",
+    "selected_path_id": "path.B.idempotent-replay",
+    "decision_summary": "Commit to the verified idempotent replay path and prohibit broader retry behavior.",
+    "status": "committed"
+  },
+  "tip": {
+    "transition_id": "tip.payment-recovery.001",
+    "decision_record_id": "drp.payment-recovery.001",
+    "selected_path_id": "path.B.idempotent-replay",
+    "starting_state": "COMMIT_STATE_UNKNOWN",
+    "target_state": "TRANSACTION_STATE_ESTABLISHED",
+    "action_summary": "Execute only the selected idempotent replay path and observe the authoritative transaction result.",
+    "status": "committed"
+  },
+  "review": {
+    "transition_id": "tip.payment-recovery.001",
+    "status": "pending",
+    "evidence_references": [],
+    "next_state": "UNOBSERVED"
+  }
+}
