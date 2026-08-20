@@ -1,0 +1,150 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/safal207/DI/schemas/decision-transition-envelope-v0.2.schema.json",
+  "title": "Decision & Transition Integrity Envelope v0.2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "envelope_version",
+    "envelope_id",
+    "dif",
+    "di",
+    "strategy",
+    "drp",
+    "tip",
+    "review"
+  ],
+  "properties": {
+    "envelope_version": {"type": "string", "enum": ["0.2"]},
+    "envelope_id": {"type": "string"},
+    "dif": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["intent_id", "status", "summary", "human_confirmed"],
+      "properties": {
+        "intent_id": {"type": "string"},
+        "status": {"type": "string", "enum": ["confirmed"]},
+        "summary": {"type": "string"},
+        "human_confirmed": {"type": "boolean"}
+      }
+    },
+    "di": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "feasibility_id",
+        "intent_id",
+        "status",
+        "feasible_paths",
+        "blocked_paths",
+        "constraints"
+      ],
+      "properties": {
+        "feasibility_id": {"type": "string"},
+        "intent_id": {"type": "string"},
+        "status": {"type": "string", "enum": ["feasible", "conditional"]},
+        "feasible_paths": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path_id",
+              "summary",
+              "requirements",
+              "risks",
+              "cost_class",
+              "reversibility"
+            ],
+            "properties": {
+              "path_id": {"type": "string"},
+              "summary": {"type": "string"},
+              "requirements": {"type": "array", "items": {"type": "string"}},
+              "risks": {"type": "array", "items": {"type": "string"}},
+              "cost_class": {"type": "string", "enum": ["low", "medium", "high", "unknown"]},
+              "reversibility": {
+                "type": "string",
+                "enum": ["reversible", "partially_reversible", "irreversible", "unknown"]
+              }
+            }
+          }
+        },
+        "blocked_paths": {"type": "array", "items": {"type": "string"}},
+        "constraints": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "strategy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "strategy_id",
+        "feasibility_id",
+        "candidate_path_ids",
+        "comparison_dimensions",
+        "recommended_path_id",
+        "rationale"
+      ],
+      "properties": {
+        "strategy_id": {"type": "string"},
+        "feasibility_id": {"type": "string"},
+        "candidate_path_ids": {"type": "array", "items": {"type": "string"}},
+        "comparison_dimensions": {"type": "array", "items": {"type": "string"}},
+        "recommended_path_id": {"type": "string"},
+        "rationale": {"type": "string"}
+      }
+    },
+    "drp": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "record_id",
+        "feasibility_id",
+        "strategy_id",
+        "selected_path_id",
+        "decision_summary",
+        "status"
+      ],
+      "properties": {
+        "record_id": {"type": "string"},
+        "feasibility_id": {"type": "string"},
+        "strategy_id": {"type": "string"},
+        "selected_path_id": {"type": "string"},
+        "decision_summary": {"type": "string"},
+        "status": {"type": "string", "enum": ["committed"]}
+      }
+    },
+    "tip": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "transition_id",
+        "decision_record_id",
+        "selected_path_id",
+        "starting_state",
+        "target_state",
+        "action_summary",
+        "status"
+      ],
+      "properties": {
+        "transition_id": {"type": "string"},
+        "decision_record_id": {"type": "string"},
+        "selected_path_id": {"type": "string"},
+        "starting_state": {"type": "string"},
+        "target_state": {"type": "string"},
+        "action_summary": {"type": "string"},
+        "status": {"type": "string", "enum": ["committed", "reviewed"]}
+      }
+    },
+    "review": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["transition_id", "status", "evidence_references", "next_state"],
+      "properties": {
+        "transition_id": {"type": "string"},
+        "status": {"type": "string", "enum": ["pending", "reviewed"]},
+        "evidence_references": {"type": "array", "items": {"type": "string"}},
+        "next_state": {"type": "string"}
+      }
+    }
+  }
+}
