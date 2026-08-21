@@ -2,9 +2,12 @@
 
 Status: Draft architecture evolution
 
-v0.2 preserves the existing DIF / DI / DRP / TIP protocol boundaries and makes one previously implicit integration step explicit: **Strategy** between feasibility and commitment.
+v0.2 preserves the existing DIF / DI / DRP / TIP protocol boundaries and makes two previously implicit integration seams explicit:
 
-Strategy is not a fifth protocol. It is the cross-stack reasoning seam that answers the first HOW question without silently making the final decision.
+1. **Strategy** between feasibility and commitment;
+2. **Path Revalidation** between commitment and transition.
+
+Neither seam is a fifth protocol. They are cross-stack integrity boundaries.
 
 ## Canonical line
 
@@ -14,6 +17,7 @@ Signal
 → Feasibility
 → Strategy
 → Decision
+→ Path Revalidation
 → Transition
 → Review
 → Next State
@@ -32,6 +36,8 @@ Operationally:
 ↓
 Решили
 ↓
+Выбранный путь всё ещё возможен?
+↓
 Как перейти по выбранному пути?
 ↓
 Что реально выполнили?
@@ -48,11 +54,12 @@ Operationally:
 ## Responsibility map
 
 ```text
-DIF      → confirmed human intent
-DI       → feasibility boundary + feasible paths
-Strategy → path comparison, trade-offs, non-binding recommendation
-DRP      → committed path and decision history
-TIP      → justified transition along the committed path
+DIF               → confirmed human intent
+DI                → feasibility boundary + feasible paths
+Strategy          → path comparison, trade-offs, non-binding recommendation
+DRP               → committed path and decision history
+Path Revalidation → proof that the committed path remains usable now
+TIP               → justified transition along the still-valid committed path
 ```
 
 The later recovery and execution-integrity layers remain orthogonal:
@@ -81,7 +88,7 @@ This happens before commitment.
 ### Transition HOW
 
 ```text
-Committed path
+Committed + revalidated path
 → how does the system safely move from current state to target state along this path?
 ```
 
@@ -93,7 +100,7 @@ They must not collapse:
 strategic HOW ≠ transition HOW
 ```
 
-## New handoff
+## Path identity handoff
 
 v0.1 effectively had:
 
@@ -108,16 +115,85 @@ v0.2 makes path identity inspectable:
 DI.feasible_paths[].path_id
 → Strategy.candidate_path_ids
 → DRP.selected_path_id
+→ Path Revalidation.selected_path_id
 → TIP.selected_path_id
 ```
 
-The central invariant is:
+The central identity invariant is:
 
 ```text
-TIP.selected_path_id == DRP.selected_path_id
+TIP.selected_path_id
+== Path Revalidation.selected_path_id
+== DRP.selected_path_id
 ```
 
-If the path must change after commitment, the system returns to a new decision boundary. It does not silently substitute another path inside TIP or execution.
+## Decision drift rule
+
+A committed path may stop being feasible after the decision was recorded.
+
+Example:
+
+```text
+DRP selected B
+↓
+reality changes
+↓
+B becomes invalid
+```
+
+This does **not** authorize TIP to choose C.
+
+Invalid:
+
+```text
+DRP = B
+Path Revalidation(B) = invalid
+TIP = C
+```
+
+Correct behavior:
+
+```text
+DRP = B
+↓
+Path Revalidation(B) = invalid | unknown
+↓
+TIP = blocked
+↓
+fresh DI assessment
+↓
+fresh Strategy comparison
+↓
+new DRP
+↓
+new DRP supersedes old DRP
+↓
+new Path Revalidation
+↓
+new TIP
+```
+
+This preserves the distinction:
+
+```text
+feasibility changed
+≠
+decision changed automatically
+```
+
+The old decision remains part of history. The replacement decision explicitly carries:
+
+```text
+new_drp.supersedes_record_id == old_drp.record_id
+```
+
+See:
+
+```text
+docs/decision-drift-replanning.md
+schemas/decision-replan-chain.schema.json
+scripts/validate-decision-replan.py
+```
 
 ## Non-collapse rules
 
@@ -125,7 +201,8 @@ If the path must change after commitment, the system returns to a new decision b
 Intent ≠ Feasibility
 Feasibility ≠ Strategy
 Strategy ≠ Decision
-Decision ≠ Transition
+Decision ≠ Path Revalidation
+Path Revalidation ≠ Transition
 Transition ≠ Execution
 Execution ≠ Outcome
 Outcome evidence ≠ current authority
@@ -144,6 +221,7 @@ Semantic validation uses:
 
 ```text
 scripts/validate-strategy-binding.py
+scripts/validate-decision-replan.py
 ```
 
 Examples:
@@ -151,19 +229,22 @@ Examples:
 ```text
 fixtures/valid-decision-transition-envelope-v0.2-strategy.json
 fixtures/invalid-decision-transition-envelope-v0.2-tip-path-mismatch.json
+fixtures/invalid-decision-drift-silent-reroute.json
+fixtures/valid-decision-replan-chain.json
+fixtures/invalid-decision-replan-without-supersession.json
 ```
 
 ## Compatibility
 
 The existing v0.1 envelope remains valid for historical fixtures and existing integration examples.
 
-v0.2 is an additive architecture evolution for flows where path synthesis and path identity must be explicit.
+v0.2 is an additive architecture evolution for flows where path synthesis, path identity, and post-commit path validity must be explicit.
 
 Protocol repositories remain authoritative for their own semantics. This cross-stack note does not redefine DIF, DI, DRP, or TIP internally.
 
 ## Summary
 
-The missing joint is now explicit:
+The missing joints are now explicit:
 
 ```text
 МОЖНО?
@@ -171,8 +252,12 @@ The missing joint is now explicit:
 КАК?
 ↓
 РЕШИЛИ
+↓
+ЭТОТ ПУТЬ ВСЁ ЕЩЁ МОЖНО?
+↓
+ПЕРЕХОД
 ```
 
 with the stronger invariant:
 
-> Feasibility tells us what can be done. Strategy tells us the available ways. DRP tells us which way was actually chosen. TIP must then preserve that choice through the transition.
+> Feasibility tells us what can be done. Strategy tells us the available ways. DRP tells us which way was chosen. Path Revalidation proves that choice is still usable now. If it is not, the system must replan and supersede the old decision rather than silently changing the path.
