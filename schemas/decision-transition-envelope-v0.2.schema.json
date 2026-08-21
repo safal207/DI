@@ -11,6 +11,7 @@
     "di",
     "strategy",
     "drp",
+    "path_revalidation",
     "tip",
     "review"
   ],
@@ -110,7 +111,28 @@
         "strategy_id": {"type": "string"},
         "selected_path_id": {"type": "string"},
         "decision_summary": {"type": "string"},
-        "status": {"type": "string", "enum": ["committed"]}
+        "status": {"type": "string", "enum": ["committed"]},
+        "supersedes_record_id": {"type": "string"}
+      }
+    },
+    "path_revalidation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "revalidation_id",
+        "decision_record_id",
+        "selected_path_id",
+        "status",
+        "checked_at",
+        "evidence_references"
+      ],
+      "properties": {
+        "revalidation_id": {"type": "string"},
+        "decision_record_id": {"type": "string"},
+        "selected_path_id": {"type": "string"},
+        "status": {"type": "string", "enum": ["valid", "invalid", "unknown"]},
+        "checked_at": {"type": "string"},
+        "evidence_references": {"type": "array", "items": {"type": "string"}}
       }
     },
     "tip": {
@@ -132,7 +154,7 @@
         "starting_state": {"type": "string"},
         "target_state": {"type": "string"},
         "action_summary": {"type": "string"},
-        "status": {"type": "string", "enum": ["committed", "reviewed"]}
+        "status": {"type": "string", "enum": ["committed", "reviewed", "blocked"]}
       }
     },
     "review": {
