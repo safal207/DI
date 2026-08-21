@@ -60,6 +60,14 @@
     "decision_summary": "Commit to the verified idempotent replay path and prohibit broader retry behavior.",
     "status": "committed"
   },
+  "path_revalidation": {
+    "revalidation_id": "revalidation.payment-recovery.001",
+    "decision_record_id": "drp.payment-recovery.001",
+    "selected_path_id": "path.B.idempotent-replay",
+    "status": "valid",
+    "checked_at": "2026-08-21T15:00:00Z",
+    "evidence_references": ["evidence://idempotency-contract/current"]
+  },
   "tip": {
     "transition_id": "tip.payment-recovery.001",
     "decision_record_id": "drp.payment-recovery.001",
