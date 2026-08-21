@@ -1,0 +1,74 @@
+{
+  "envelope_version": "0.2",
+  "envelope_id": "dti.payment-recovery.drift.invalid.001",
+  "dif": {
+    "intent_id": "dif.intent.payment-exactly-once.001",
+    "status": "confirmed",
+    "summary": "Ensure one intended payment reaches a correct terminal outcome without an unintended duplicate financial action.",
+    "human_confirmed": true
+  },
+  "di": {
+    "feasibility_id": "di.feasibility.payment-recovery.001",
+    "intent_id": "dif.intent.payment-exactly-once.001",
+    "status": "conditional",
+    "feasible_paths": [
+      {
+        "path_id": "path.B.idempotent-replay",
+        "summary": "Replay the original request only through a verified idempotency contract.",
+        "requirements": ["idempotency key semantics are verified for this operation"],
+        "risks": ["incorrect idempotency scope could create a second financial action"],
+        "cost_class": "medium",
+        "reversibility": "partially_reversible"
+      },
+      {
+        "path_id": "path.C.wait-for-evidence",
+        "summary": "Wait for stronger terminal evidence before choosing another mutation.",
+        "requirements": ["later settlement or terminal evidence is expected"],
+        "risks": ["completion is delayed"],
+        "cost_class": "low",
+        "reversibility": "reversible"
+      }
+    ],
+    "blocked_paths": ["blind non-idempotent replay while commit state is unknown"],
+    "constraints": ["the original payment commit state is currently ambiguous"]
+  },
+  "strategy": {
+    "strategy_id": "strategy.payment-recovery.001",
+    "feasibility_id": "di.feasibility.payment-recovery.001",
+    "candidate_path_ids": ["path.B.idempotent-replay", "path.C.wait-for-evidence"],
+    "comparison_dimensions": ["duplicate-risk", "latency", "reversibility"],
+    "recommended_path_id": "path.B.idempotent-replay",
+    "rationale": "Path B was preferred while its idempotency guarantee remained valid."
+  },
+  "drp": {
+    "record_id": "drp.payment-recovery.001",
+    "feasibility_id": "di.feasibility.payment-recovery.001",
+    "strategy_id": "strategy.payment-recovery.001",
+    "selected_path_id": "path.B.idempotent-replay",
+    "decision_summary": "Commit to path B while its verified idempotency condition holds.",
+    "status": "committed"
+  },
+  "path_revalidation": {
+    "revalidation_id": "revalidation.payment-recovery.invalid.001",
+    "decision_record_id": "drp.payment-recovery.001",
+    "selected_path_id": "path.B.idempotent-replay",
+    "status": "invalid",
+    "checked_at": "2026-08-21T15:10:00Z",
+    "evidence_references": ["evidence://idempotency-contract/no-longer-valid"]
+  },
+  "tip": {
+    "transition_id": "tip.payment-recovery.silent-reroute.001",
+    "decision_record_id": "drp.payment-recovery.001",
+    "selected_path_id": "path.C.wait-for-evidence",
+    "starting_state": "COMMIT_STATE_UNKNOWN",
+    "target_state": "WAITING_FOR_EVIDENCE",
+    "action_summary": "Silently switch to path C after path B became invalid.",
+    "status": "committed"
+  },
+  "review": {
+    "transition_id": "tip.payment-recovery.silent-reroute.001",
+    "status": "pending",
+    "evidence_references": [],
+    "next_state": "UNOBSERVED"
+  }
+}
