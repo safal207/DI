@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
-"""Validate the DI -> Strategy -> DRP -> TIP path binding.
+"""Validate DI -> Strategy -> DRP -> path revalidation -> TIP binding.
 
 The Strategy Bridge is integration glue, not a fifth protocol. DI enumerates
 feasible paths, Strategy compares them without committing, DRP selects one path,
-and TIP must continue exactly that selected path.
+and TIP must continue exactly that selected path. Before TIP may proceed, the
+committed path is revalidated. If it is invalid or unknown, TIP must remain
+blocked for replanning; it may not silently substitute another path.
 """
 
 from __future__ import annotations
@@ -17,6 +19,7 @@ ROOT = Path(__file__).resolve().parents[1]
 CASES = [
     ("fixtures/valid-decision-transition-envelope-v0.2-strategy.json", True),
     ("fixtures/invalid-decision-transition-envelope-v0.2-tip-path-mismatch.json", False),
+    ("fixtures/invalid-decision-drift-silent-reroute.json", False),
 ]
 
 
@@ -42,11 +45,17 @@ def validate_strategy_envelope(instance: Any) -> list[str]:
     di = instance.get("di")
     strategy = instance.get("strategy")
     drp = instance.get("drp")
+    revalidation = instance.get("path_revalidation")
     tip = instance.get("tip")
     review = instance.get("review")
 
-    if not all(isinstance(part, dict) for part in (dif, di, strategy, drp, tip, review)):
-        errors.append("$: DIF, DI, strategy, DRP, TIP, and review objects are required")
+    if not all(
+        isinstance(part, dict)
+        for part in (dif, di, strategy, drp, revalidation, tip, review)
+    ):
+        errors.append(
+            "$: DIF, DI, strategy, DRP, path_revalidation, TIP, and review objects are required"
+        )
         return errors
 
     if dif.get("human_confirmed") is not True:
@@ -113,6 +122,27 @@ def validate_strategy_envelope(instance: Any) -> list[str]:
     if selected not in candidate_ids:
         errors.append("$.drp.selected_path_id: committed path must have been evaluated by Strategy")
 
+    if revalidation.get("decision_record_id") != drp.get("record_id"):
+        errors.append(
+            "$.path_revalidation.decision_record_id: must exactly match $.drp.record_id"
+        )
+    if revalidation.get("selected_path_id") != selected:
+        errors.append(
+            "$.path_revalidation.selected_path_id: must exactly match the committed DRP path"
+        )
+
+    evidence = revalidation.get("evidence_references")
+    if not isinstance(evidence, list) or not evidence:
+        errors.append(
+            "$.path_revalidation.evidence_references: path revalidation requires evidence"
+        )
+
+    revalidation_status = revalidation.get("status")
+    if revalidation_status not in {"valid", "invalid", "unknown"}:
+        errors.append(
+            "$.path_revalidation.status: expected valid, invalid, or unknown"
+        )
+
     if tip.get("decision_record_id") != drp.get("record_id"):
         errors.append("$.tip.decision_record_id: must exactly match $.drp.record_id")
 
@@ -120,6 +150,17 @@ def validate_strategy_envelope(instance: Any) -> list[str]:
         errors.append(
             "$.tip.selected_path_id: must exactly match $.drp.selected_path_id; path substitution after commitment is forbidden"
         )
+
+    if revalidation_status == "valid":
+        if tip.get("status") == "blocked":
+            errors.append(
+                "$.tip.status: a valid selected path should not be blocked for replanning"
+            )
+    elif revalidation_status in {"invalid", "unknown"}:
+        if tip.get("status") != "blocked":
+            errors.append(
+                "$.tip.status: invalid or unknown committed path must block TIP for replanning; silent reroute is forbidden"
+            )
 
     if review.get("transition_id") != tip.get("transition_id"):
         errors.append("$.review.transition_id: must exactly match $.tip.transition_id")
