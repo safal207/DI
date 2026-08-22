@@ -39,6 +39,9 @@
       "type": "string",
       "enum": ["active", "revoked", "unknown"]
     },
+    "authority_consumption_receipt_id": {"type": "string"},
+    "use_token": {"type": "string"},
+    "dispatch_id": {"type": "string"},
     "executed_at": {"type": "string"},
     "evidence_references": {
       "type": "array",
