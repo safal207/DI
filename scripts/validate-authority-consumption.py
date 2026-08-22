@@ -2,14 +2,15 @@
 """Validate single-use authority consumption at the automated dispatch seam.
 
 Use-time authority proves that a grant is still valid. It does not prove that
-another worker has not already used the same grant. Automated SAFE_RETRY and
-ROLLBACK therefore require a durable consumption receipt that binds exactly one
-authority receipt and one use token to one dispatch before execution.
+another worker has not already used the same mutation right. Automated
+SAFE_RETRY and ROLLBACK therefore require a durable consumption receipt that
+binds one authority check and one recovery decision to one dispatch before
+execution.
 
 This validator checks evidence semantics only. Real atomicity must be enforced
 by the system that owns the side effect, ideally by atomically consuming the
-use token and creating/claiming the dispatch record in the same consistency
-boundary.
+single-use scope and creating/claiming the dispatch record in the same
+consistency boundary.
 """
 
 from __future__ import annotations
@@ -27,6 +28,7 @@ CASES = [
     ("fixtures/invalid-authority-consume-after-execution.json", False),
     ("fixtures/invalid-authority-dispatch-mismatch.json", False),
     ("fixtures/invalid-authority-replayed-use-token.json", False),
+    ("fixtures/invalid-authority-double-consume-same-decision.json", False),
 ]
 
 AUTOMATED_ACTIONS = {"SAFE_RETRY", "ROLLBACK"}
@@ -67,6 +69,7 @@ def validate_authority_consumption(instance: Any) -> list[str]:
     errors: list[str] = []
     consumed_tokens: dict[str, str] = {}
     consumed_authority_receipts: dict[str, str] = {}
+    consumed_scopes: dict[tuple[str, int, str, str], str] = {}
 
     for index, cycle in enumerate(cycles):
         path = f"$.cycles[{index}]"
@@ -100,6 +103,22 @@ def validate_authority_consumption(instance: Any) -> list[str]:
         authority_id = decision.get("authority_id")
         authority_generation = decision.get("authority_generation")
         authority_receipt_id = authority.get("authority_receipt_id")
+
+        if execution_mode != selected_action:
+            errors.append(f"{path}.execution_mode: must exactly match recovery_decision.selected_action")
+
+        if authority.get("authority_status") != "active":
+            errors.append(f"{path}.use_time_authority_receipt.authority_status: automated mutation requires active authority")
+        if authority.get("recovery_decision_id") != decision_id:
+            errors.append(f"{path}.use_time_authority_receipt.recovery_decision_id: must exactly match recovery_decision.decision_id")
+        if authority.get("recovery_cycle_id") != cycle.get("cycle_id"):
+            errors.append(f"{path}.use_time_authority_receipt.recovery_cycle_id: must exactly match cycle_id")
+        if authority.get("bound_execution_mode") != execution_mode:
+            errors.append(f"{path}.use_time_authority_receipt.bound_execution_mode: must exactly match execution_mode")
+        if authority.get("authority_id") != authority_id:
+            errors.append(f"{path}.use_time_authority_receipt.authority_id: must exactly match recovery_decision.authority_id")
+        if authority.get("authority_generation") != authority_generation:
+            errors.append(f"{path}.use_time_authority_receipt.authority_generation: must exactly match recovery_decision.authority_generation")
 
         if consumption.get("consumption_version") != "0.1":
             errors.append(f"{path}.authority_consumption_receipt.consumption_version: expected '0.1'")
@@ -139,11 +158,36 @@ def validate_authority_consumption(instance: Any) -> list[str]:
         consumed_at = parse_timestamp(consumption.get("consumed_at"), f"{path}.authority_consumption_receipt.consumed_at", errors)
         executed_at = parse_timestamp(execution.get("executed_at"), f"{path}.execution_receipt.executed_at", errors)
 
-        if checked_at is not None and consumed_at is not None and checked_at > consumed_at:
-            errors.append(f"{path}.authority_consumption_receipt.consumed_at: authority cannot be consumed before its use-time check")
+        max_binding_age_seconds = authority.get("max_binding_age_seconds")
+        if not isinstance(max_binding_age_seconds, int) or isinstance(max_binding_age_seconds, bool) or max_binding_age_seconds < 0:
+            errors.append(f"{path}.use_time_authority_receipt.max_binding_age_seconds: non-negative integer is required")
+            max_binding_age_seconds = None
+
+        if checked_at is not None and consumed_at is not None:
+            if checked_at > consumed_at:
+                errors.append(f"{path}.authority_consumption_receipt.consumed_at: authority cannot be consumed before its use-time check")
+            elif max_binding_age_seconds is not None and (consumed_at - checked_at).total_seconds() > max_binding_age_seconds:
+                errors.append(f"{path}.authority_consumption_receipt.consumed_at: authority binding expired before consumption")
+
         if consumed_at is not None and executed_at is not None and consumed_at > executed_at:
             errors.append(f"{path}.authority_consumption_receipt.consumed_at: authority must be consumed before or at execution")
 
+        if checked_at is not None and executed_at is not None and max_binding_age_seconds is not None:
+            if (executed_at - checked_at).total_seconds() > max_binding_age_seconds:
+                errors.append(f"{path}.execution_receipt.executed_at: use-time authority binding expired before execution")
+
+        if execution.get("recovery_decision_id") != decision_id:
+            errors.append(f"{path}.execution_receipt.recovery_decision_id: must exactly match recovery_decision.decision_id")
+        if execution.get("recovery_cycle_id") != cycle.get("cycle_id"):
+            errors.append(f"{path}.execution_receipt.recovery_cycle_id: must exactly match cycle_id")
+        if execution.get("declared_execution_mode") != execution_mode:
+            errors.append(f"{path}.execution_receipt.declared_execution_mode: must exactly match execution_mode")
+        if execution.get("execution_status") == "observed" and execution.get("observed_execution_mode") != execution_mode:
+            errors.append(f"{path}.execution_receipt.observed_execution_mode: observed automated mode must exactly match execution_mode")
+        if execution.get("authority_status_at_execution") != "active":
+            errors.append(f"{path}.execution_receipt.authority_status_at_execution: automated mutation requires active authority at execution")
+        if execution.get("authority_generation_at_execution") != authority_generation:
+            errors.append(f"{path}.execution_receipt.authority_generation_at_execution: must exactly match consumed authority generation")
         if execution.get("authority_consumption_receipt_id") != consumption_receipt_id:
             errors.append(f"{path}.execution_receipt.authority_consumption_receipt_id: must bind to the exact consumption receipt")
         if execution.get("use_token") != use_token:
@@ -168,6 +212,28 @@ def validate_authority_consumption(instance: Any) -> list[str]:
                 )
             else:
                 consumed_authority_receipts[authority_receipt_id] = path
+
+        if (
+            status == "consumed"
+            and nonempty_string(authority_id)
+            and isinstance(authority_generation, int)
+            and not isinstance(authority_generation, bool)
+            and nonempty_string(decision_id)
+            and execution_mode in AUTOMATED_ACTIONS
+        ):
+            single_use_scope = (
+                authority_id,
+                authority_generation,
+                decision_id,
+                execution_mode,
+            )
+            previous_path = consumed_scopes.get(single_use_scope)
+            if previous_path is not None:
+                errors.append(
+                    f"{path}.authority_consumption_receipt: single-use recovery decision authority was already consumed at {previous_path}; a different token does not create a second permission"
+                )
+            else:
+                consumed_scopes[single_use_scope] = path
 
     return errors
 
