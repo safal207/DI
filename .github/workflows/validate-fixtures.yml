@@ -36,3 +36,6 @@ jobs:
 
       - name: Validate decision replanning after path invalidation
         run: python scripts/validate-decision-replan.py
+
+      - name: Validate full end-to-end integrity trace
+        run: python scripts/validate-end-to-end-integrity.py
