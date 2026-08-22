@@ -1,0 +1,118 @@
+{
+  "chain_version": "0.1",
+  "chain_id": "authority-consumption.invalid.double-consume-same-decision.001",
+  "cycles": [
+    {
+      "cycle_id": "cycle.recovery.001",
+      "recovery_of_cycle_id": "cycle.failed.000",
+      "execution_mode": "SAFE_RETRY",
+      "recovery_decision": {
+        "decision_id": "recovery.shared",
+        "selected_action": "SAFE_RETRY",
+        "authority_id": "authority.receipt-delivery",
+        "authority_generation": 7
+      },
+      "use_time_authority_receipt": {
+        "authority_receipt_version": "0.1",
+        "authority_receipt_id": "authority-receipt.001",
+        "authority_id": "authority.receipt-delivery",
+        "recovery_decision_id": "recovery.shared",
+        "recovery_cycle_id": "cycle.recovery.001",
+        "bound_execution_mode": "SAFE_RETRY",
+        "authority_generation": 7,
+        "authority_status": "active",
+        "checked_at": "2026-08-19T12:29:58+00:00",
+        "max_binding_age_seconds": 5,
+        "evidence_references": ["evidence://authority/active/generation-7/worker-1"]
+      },
+      "authority_consumption_receipt": {
+        "consumption_version": "0.1",
+        "consumption_receipt_id": "consumption.001",
+        "authority_receipt_id": "authority-receipt.001",
+        "authority_id": "authority.receipt-delivery",
+        "authority_generation": 7,
+        "recovery_decision_id": "recovery.shared",
+        "recovery_cycle_id": "cycle.recovery.001",
+        "bound_execution_mode": "SAFE_RETRY",
+        "use_token": "use-token.worker-1",
+        "consumption_status": "consumed",
+        "consumed_at": "2026-08-19T12:29:59+00:00",
+        "dispatch_id": "dispatch.worker-1",
+        "evidence_references": ["evidence://authority/consume/worker-1"]
+      },
+      "execution_receipt": {
+        "receipt_version": "0.1",
+        "receipt_id": "execution.001",
+        "recovery_decision_id": "recovery.shared",
+        "recovery_cycle_id": "cycle.recovery.001",
+        "declared_execution_mode": "SAFE_RETRY",
+        "observed_execution_mode": "SAFE_RETRY",
+        "execution_status": "observed",
+        "authority_receipt_id": "authority-receipt.001",
+        "authority_generation_at_execution": 7,
+        "authority_status_at_execution": "active",
+        "authority_consumption_receipt_id": "consumption.001",
+        "use_token": "use-token.worker-1",
+        "dispatch_id": "dispatch.worker-1",
+        "executed_at": "2026-08-19T12:30:00+00:00",
+        "evidence_references": ["evidence://dispatch/worker-1"]
+      }
+    },
+    {
+      "cycle_id": "cycle.recovery.002",
+      "recovery_of_cycle_id": "cycle.failed.000",
+      "execution_mode": "SAFE_RETRY",
+      "recovery_decision": {
+        "decision_id": "recovery.shared",
+        "selected_action": "SAFE_RETRY",
+        "authority_id": "authority.receipt-delivery",
+        "authority_generation": 7
+      },
+      "use_time_authority_receipt": {
+        "authority_receipt_version": "0.1",
+        "authority_receipt_id": "authority-receipt.002",
+        "authority_id": "authority.receipt-delivery",
+        "recovery_decision_id": "recovery.shared",
+        "recovery_cycle_id": "cycle.recovery.002",
+        "bound_execution_mode": "SAFE_RETRY",
+        "authority_generation": 7,
+        "authority_status": "active",
+        "checked_at": "2026-08-19T12:29:58.200000+00:00",
+        "max_binding_age_seconds": 5,
+        "evidence_references": ["evidence://authority/active/generation-7/worker-2"]
+      },
+      "authority_consumption_receipt": {
+        "consumption_version": "0.1",
+        "consumption_receipt_id": "consumption.002",
+        "authority_receipt_id": "authority-receipt.002",
+        "authority_id": "authority.receipt-delivery",
+        "authority_generation": 7,
+        "recovery_decision_id": "recovery.shared",
+        "recovery_cycle_id": "cycle.recovery.002",
+        "bound_execution_mode": "SAFE_RETRY",
+        "use_token": "use-token.worker-2",
+        "consumption_status": "consumed",
+        "consumed_at": "2026-08-19T12:29:59.200000+00:00",
+        "dispatch_id": "dispatch.worker-2",
+        "evidence_references": ["evidence://authority/consume/worker-2"]
+      },
+      "execution_receipt": {
+        "receipt_version": "0.1",
+        "receipt_id": "execution.002",
+        "recovery_decision_id": "recovery.shared",
+        "recovery_cycle_id": "cycle.recovery.002",
+        "declared_execution_mode": "SAFE_RETRY",
+        "observed_execution_mode": "SAFE_RETRY",
+        "execution_status": "observed",
+        "authority_receipt_id": "authority-receipt.002",
+        "authority_generation_at_execution": 7,
+        "authority_status_at_execution": "active",
+        "authority_consumption_receipt_id": "consumption.002",
+        "use_token": "use-token.worker-2",
+        "dispatch_id": "dispatch.worker-2",
+        "executed_at": "2026-08-19T12:30:00.200000+00:00",
+        "evidence_references": ["evidence://dispatch/worker-2"]
+      }
+    }
+  ]
+}
