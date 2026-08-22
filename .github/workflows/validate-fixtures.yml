@@ -28,6 +28,9 @@ jobs:
       - name: Validate use-time authority binding
         run: python scripts/validate-authority-binding.py
 
+      - name: Validate single-use authority consumption
+        run: python scripts/validate-authority-consumption.py
+
       - name: Validate strategy path binding
         run: python scripts/validate-strategy-binding.py
 
