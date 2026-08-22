@@ -165,7 +165,10 @@
         "transition_id": {"type": "string"},
         "status": {"type": "string", "enum": ["pending", "reviewed"]},
         "evidence_references": {"type": "array", "items": {"type": "string"}},
-        "next_state": {"type": "string"}
+        "next_state": {"type": "string"},
+        "reviewed_at": {"type": "string"},
+        "accepted_state_generation": {"type": "integer"},
+        "max_evidence_age_seconds": {"type": "integer", "minimum": 0}
       }
     }
   }
