@@ -39,3 +39,8 @@ jobs:
 
       - name: Validate full end-to-end integrity trace
         run: python scripts/validate-end-to-end-integrity.py
+
+      - name: Smoke-test DI conformance CLI
+        run: |
+          python scripts/di-conformance.py fixtures/valid-end-to-end-integrity-v0.2.json --pretty > conformance-report.json
+          cat conformance-report.json
