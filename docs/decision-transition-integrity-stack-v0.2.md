@@ -248,6 +248,36 @@ schemas/authority-consumption-receipt.schema.json
 scripts/validate-authority-consumption.py
 ```
 
+## End-to-end integrity spine
+
+Valid individual pieces do not guarantee a valid whole. v0.2 therefore includes one canonical trace that binds every seam from confirmed intent to a fresh reviewed next state:
+
+```text
+Confirmed Intent
+→ DI Feasible Paths
+→ Strategy
+→ DRP
+→ Path Revalidation
+→ TIP
+→ Recovery Decision
+→ Use-Time Authority
+→ Authority Consumption
+→ Execution Receipt
+→ State Effect Receipt
+→ Fresh Review
+→ Proven Next State
+```
+
+The validator accepts the canonical trace and then deliberately corrupts one seam at a time. Every mutation must be rejected.
+
+See:
+
+```text
+docs/end-to-end-integrity-trace.md
+fixtures/valid-end-to-end-integrity-v0.2.json
+scripts/validate-end-to-end-integrity.py
+```
+
 ## Non-collapse rules
 
 ```text
@@ -262,6 +292,7 @@ Authority Consumption ≠ Execution
 Execution ≠ Outcome
 Outcome evidence ≠ current authority
 Fresh evidence ≠ proof of causality
+Valid pieces ≠ valid whole
 ```
 
 ## Machine-readable contract
@@ -287,6 +318,7 @@ scripts/validate-strategy-binding.py
 scripts/validate-decision-replan.py
 scripts/validate-authority-binding.py
 scripts/validate-authority-consumption.py
+scripts/validate-end-to-end-integrity.py
 ```
 
 Examples:
@@ -300,6 +332,7 @@ fixtures/invalid-decision-replan-without-supersession.json
 fixtures/valid-authority-consumption.json
 fixtures/invalid-authority-replayed-use-token.json
 fixtures/invalid-authority-double-consume-same-decision.json
+fixtures/valid-end-to-end-integrity-v0.2.json
 ```
 
 ## Atomicity boundary
@@ -323,7 +356,7 @@ Writing a consumption receipt only after dispatch does not close the concurrency
 
 The existing v0.1 envelope remains valid for historical fixtures and existing integration examples.
 
-v0.2 is an additive architecture evolution for flows where path synthesis, path identity, post-commit path validity, and safe automated mutation must be explicit.
+v0.2 is an additive architecture evolution for flows where path synthesis, path identity, post-commit path validity, safe automated mutation, and cross-layer evidence integrity must be explicit.
 
 Protocol repositories remain authoritative for their own semantics. This cross-stack note does not redefine DIF, DI, DRP, or TIP internally.
 
@@ -347,6 +380,12 @@ The missing joints are now explicit:
 ЕГО ЕЩЁ НЕ ИСПОЛЬЗОВАЛИ?
 ↓
 ИСПОЛНЕНИЕ
+↓
+ЧТО РЕАЛЬНО ИЗМЕНИЛОСЬ?
+↓
+ДОКАЗАТЕЛЬСТВО ЕЩЁ СВЕЖЕЕ?
+↓
+НОВОЕ ДОКАЗАННОЕ СОСТОЯНИЕ
 ```
 
 with the stronger invariants:
@@ -354,3 +393,5 @@ with the stronger invariants:
 > Feasibility tells us what can be done. Strategy tells us the available ways. DRP tells us which way was chosen. Path Revalidation proves that choice is still usable now. If it is not, the system must replan and supersede the old decision rather than silently changing the path.
 
 > Use-time authority proves permission is valid now. Authority Consumption proves that one automated mutation right has been claimed exactly once before dispatch.
+
+> End-to-end integrity proves that those individually valid claims still belong to one coherent causal chain.
