@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/safal207/DI/schemas/authority-consumption-receipt.schema.json",
+  "title": "Authority Consumption Receipt v0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "consumption_version",
+    "consumption_receipt_id",
+    "authority_receipt_id",
+    "authority_id",
+    "authority_generation",
+    "recovery_decision_id",
+    "recovery_cycle_id",
+    "bound_execution_mode",
+    "use_token",
+    "consumption_status",
+    "consumed_at",
+    "dispatch_id",
+    "evidence_references"
+  ],
+  "properties": {
+    "consumption_version": {"type": "string", "enum": ["0.1"]},
+    "consumption_receipt_id": {"type": "string", "minLength": 1},
+    "authority_receipt_id": {"type": "string", "minLength": 1},
+    "authority_id": {"type": "string", "minLength": 1},
+    "authority_generation": {"type": "integer", "minimum": 0},
+    "recovery_decision_id": {"type": "string", "minLength": 1},
+    "recovery_cycle_id": {"type": "string", "minLength": 1},
+    "bound_execution_mode": {
+      "type": "string",
+      "enum": ["SAFE_RETRY", "ROLLBACK"]
+    },
+    "use_token": {"type": "string", "minLength": 1},
+    "consumption_status": {
+      "type": "string",
+      "enum": ["consumed", "already_consumed", "failed", "unknown"]
+    },
+    "consumed_at": {"type": "string", "minLength": 1},
+    "dispatch_id": {"type": "string", "minLength": 1},
+    "evidence_references": {
+      "type": "array",
+      "items": {"type": "string"},
+      "minItems": 1
+    }
+  }
+}
