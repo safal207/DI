@@ -2,12 +2,14 @@
 
 Status: Draft architecture evolution
 
-v0.2 preserves the existing DIF / DI / DRP / TIP protocol boundaries and makes two previously implicit integration seams explicit:
+v0.2 preserves the existing DIF / DI / DRP / TIP protocol boundaries and makes two previously implicit decision/transition seams explicit:
 
 1. **Strategy** between feasibility and commitment;
 2. **Path Revalidation** between commitment and transition.
 
-Neither seam is a fifth protocol. They are cross-stack integrity boundaries.
+The execution-integrity line is also strengthened with **Single-Use Authority Consumption** between use-time authority and automated execution.
+
+None of these seams is a fifth protocol. They are cross-stack integrity boundaries.
 
 ## Canonical line
 
@@ -67,11 +69,22 @@ The later recovery and execution-integrity layers remain orthogonal:
 ```text
 Recovery Decision Matrix
 → Use-Time Authority
+→ Authority Consumption
 → Execution Receipt
 → State Effect Receipt
 → Fresh Review
 → Next State
 ```
+
+The new distinction is:
+
+```text
+authority valid now
+≠
+authority still available for another use
+```
+
+For automated `SAFE_RETRY` and `ROLLBACK`, use-time validity must therefore be followed by durable single-use consumption before execution.
 
 ## Two HOWs
 
@@ -195,6 +208,46 @@ schemas/decision-replan-chain.schema.json
 scripts/validate-decision-replan.py
 ```
 
+## Single-use authority rule
+
+A valid use-time authority check can still be unsafe if two workers race to use the same recovery decision.
+
+Invalid:
+
+```text
+Recovery Decision D
+↓
+authority active
+↓
+worker A → token A → dispatch A
+worker B → token B → dispatch B
+```
+
+Different tokens do not create two permissions.
+
+For automated mutation the single-use scope is:
+
+```text
+(
+  authority_id,
+  authority_generation,
+  recovery_decision_id,
+  bound_execution_mode
+)
+```
+
+At most one successful consumption is allowed for that scope.
+
+Execution must then bind to the exact consumption receipt, `use_token`, and `dispatch_id`.
+
+See:
+
+```text
+docs/authority-consumption-binding.md
+schemas/authority-consumption-receipt.schema.json
+scripts/validate-authority-consumption.py
+```
+
 ## Non-collapse rules
 
 ```text
@@ -204,6 +257,8 @@ Strategy ≠ Decision
 Decision ≠ Path Revalidation
 Path Revalidation ≠ Transition
 Transition ≠ Execution
+Use-Time Authority ≠ Authority Consumption
+Authority Consumption ≠ Execution
 Execution ≠ Outcome
 Outcome evidence ≠ current authority
 Fresh evidence ≠ proof of causality
@@ -217,11 +272,21 @@ Strategy-bearing envelopes use:
 schemas/decision-transition-envelope-v0.2.schema.json
 ```
 
+Execution-integrity artifacts include:
+
+```text
+schemas/use-time-authority-receipt.schema.json
+schemas/authority-consumption-receipt.schema.json
+schemas/execution-receipt.schema.json
+```
+
 Semantic validation uses:
 
 ```text
 scripts/validate-strategy-binding.py
 scripts/validate-decision-replan.py
+scripts/validate-authority-binding.py
+scripts/validate-authority-consumption.py
 ```
 
 Examples:
@@ -232,13 +297,33 @@ fixtures/invalid-decision-transition-envelope-v0.2-tip-path-mismatch.json
 fixtures/invalid-decision-drift-silent-reroute.json
 fixtures/valid-decision-replan-chain.json
 fixtures/invalid-decision-replan-without-supersession.json
+fixtures/valid-authority-consumption.json
+fixtures/invalid-authority-replayed-use-token.json
+fixtures/invalid-authority-double-consume-same-decision.json
 ```
+
+## Atomicity boundary
+
+The consumption receipt is evidence, not a runtime lock by itself.
+
+A production implementation should atomically claim the single-use scope and create/claim the dispatch record at the side-effect boundary whenever possible.
+
+If that cannot be one transaction, the safer order is:
+
+```text
+durable consume
+→ persist unique dispatch_id
+→ dispatch
+→ retry by recovering the same dispatch_id
+```
+
+Writing a consumption receipt only after dispatch does not close the concurrency race.
 
 ## Compatibility
 
 The existing v0.1 envelope remains valid for historical fixtures and existing integration examples.
 
-v0.2 is an additive architecture evolution for flows where path synthesis, path identity, and post-commit path validity must be explicit.
+v0.2 is an additive architecture evolution for flows where path synthesis, path identity, post-commit path validity, and safe automated mutation must be explicit.
 
 Protocol repositories remain authoritative for their own semantics. This cross-stack note does not redefine DIF, DI, DRP, or TIP internally.
 
@@ -256,8 +341,16 @@ The missing joints are now explicit:
 ЭТОТ ПУТЬ ВСЁ ЕЩЁ МОЖНО?
 ↓
 ПЕРЕХОД
+↓
+РАЗРЕШЕНИЕ ЕЩЁ ДЕЙСТВУЕТ?
+↓
+ЕГО ЕЩЁ НЕ ИСПОЛЬЗОВАЛИ?
+↓
+ИСПОЛНЕНИЕ
 ```
 
-with the stronger invariant:
+with the stronger invariants:
 
 > Feasibility tells us what can be done. Strategy tells us the available ways. DRP tells us which way was chosen. Path Revalidation proves that choice is still usable now. If it is not, the system must replan and supersede the old decision rather than silently changing the path.
+
+> Use-time authority proves permission is valid now. Authority Consumption proves that one automated mutation right has been claimed exactly once before dispatch.
