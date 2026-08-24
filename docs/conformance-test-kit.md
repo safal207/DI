@@ -1,4 +1,4 @@
-# DI Conformance Test Kit v0.2
+# DI Conformance Test Kit v0.3
 
 Status: Draft developer interface
 
@@ -23,11 +23,16 @@ Supported profiles:
 ```text
 end-to-end-integrity-v0.2
 multi-agent-dispatch-v0.3
+lease-split-brain-v0.4
 ```
 
-The first checks the complete decision-to-evidence chain.
+The profiles are additive in scope:
 
-The second checks multi-agent ownership continuity after a mutation right has already been consumed.
+```text
+v0.2 → decision-to-evidence integrity
+v0.3 → multi-agent ownership continuity
+v0.4 → lease expiry + fencing against stale executors
+```
 
 ## CLI
 
@@ -53,6 +58,14 @@ python scripts/di-conformance.py path/to/multi-agent-trace.json \
   --pretty
 ```
 
+Lease / split-brain profile:
+
+```bash
+python scripts/di-conformance.py path/to/lease-trace.json \
+  --profile lease-split-brain-v0.4 \
+  --pretty
+```
+
 A conforming trace exits `0`.
 
 A non-conforming trace exits `1`.
@@ -64,8 +77,8 @@ Shape:
 ```json
 {
   "report_version": "0.1",
-  "profile": "multi-agent-dispatch-v0.3",
-  "input_file": "path/to/multi-agent-trace.json",
+  "profile": "lease-split-brain-v0.4",
+  "input_file": "path/to/lease-trace.json",
   "status": "PASS",
   "error_count": 0,
   "errors": []
@@ -79,13 +92,13 @@ Example shape:
 ```json
 {
   "report_version": "0.1",
-  "profile": "multi-agent-dispatch-v0.3",
-  "input_file": "path/to/multi-agent-trace.json",
+  "profile": "lease-split-brain-v0.4",
+  "input_file": "path/to/lease-trace.json",
   "status": "FAIL",
   "error_count": 2,
   "errors": [
-    "$.execution_receipt.actor_id: only the latest dispatch owner may execute",
-    "$.execution_receipt.dispatch_id: worker takeover must preserve consumed dispatch_id"
+    "$.dispatch_attempt_receipts: exactly one attempt may be accepted, got 2",
+    "$.execution_receipt.dispatch_fencing_token: must bind to accepted attempt fencing token"
   ]
 }
 ```
@@ -183,6 +196,60 @@ docs/multi-agent-dispatch-integrity-v0.3.md
 schemas/dispatch-ownership-event.schema.json
 ```
 
+## Profile: lease-split-brain-v0.4
+
+Reference trace:
+
+```text
+fixtures/valid-lease-split-brain-recovery-v0.4.json
+```
+
+Implementation:
+
+```text
+scripts/validate-lease-split-brain.py
+```
+
+This profile reuses the v0.3 ownership validator and adds lease/fencing semantics.
+
+A PASS means that, according to the supplied trace:
+
+```text
+v0.3 ownership continuity still holds
+AND
+every represented ownership epoch has lease evidence
+AND
+lease-expiry takeover occurs only after predecessor expiry
+AND
+fencing tokens strictly advance across represented lease epochs
+AND
+stale worker attempts are rejected
+AND
+exactly one dispatch attempt is accepted
+AND
+the accepted attempt belongs to the latest owner and current lease
+AND
+execution binds to that exact lease, fencing token, and accepted attempt
+AND
+execution occurs inside the current lease window
+```
+
+The central v0.4 law is:
+
+```text
+worker belief != side-effect admission
+```
+
+A newer fencing token must make older execution epochs rejectable.
+
+See:
+
+```text
+docs/lease-split-brain-integrity-v0.4.md
+schemas/dispatch-lease-receipt.schema.json
+schemas/dispatch-attempt-receipt.schema.json
+```
+
 ## What a PASS does not mean
 
 PASS does not independently prove:
@@ -190,14 +257,20 @@ PASS does not independently prove:
 ```text
 external evidence is truthful
 runtime database operations were atomic
-a distributed lock actually existed
+a distributed lock or lease service actually enforced the trace
 provider APIs behaved exactly as claimed
 human intent was ethically obtained outside the represented DIF confirmation
 ```
 
 Those are evidence, runtime, coordination, or upstream protocol boundaries.
 
-In particular, the multi-agent ownership event chain is **evidence of ownership continuity**, not a distributed mutex by itself.
+In particular:
+
+```text
+ownership event chain != distributed mutex
+lease receipt != runtime lease implementation
+fencing evidence != proof the side-effect owner enforced fencing atomically
+```
 
 ## Integration pattern
 
@@ -216,7 +289,9 @@ An agent evaluator can store the JSON report next to the trace as an auditable c
 
 ## Profile design rule
 
-New profiles should reuse canonical protocol invariants and remain explicit about their scope.
+New profiles should reuse canonical invariants rather than fork their semantics.
+
+That is why v0.4 imports and reuses the v0.3 ownership validator before applying lease/fencing checks.
 
 A narrow profile may prove one seam without claiming that every upstream or downstream property was independently verified.
 
@@ -234,4 +309,4 @@ external traces
 portable PASS / FAIL evidence
 ```
 
-This is the point where the architecture becomes testable by systems outside the repository, including multi-agent systems where the executor itself can change over time.
+The profile ladder now reaches a genuinely distributed failure mode: a stale executor may still be alive, but it must not be admissible once a newer fencing epoch exists.
