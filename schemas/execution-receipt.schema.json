@@ -42,6 +42,9 @@
     "authority_consumption_receipt_id": {"type": "string"},
     "use_token": {"type": "string"},
     "dispatch_id": {"type": "string"},
+    "actor_id": {"type": "string"},
+    "dispatch_ownership_event_id": {"type": "string"},
+    "dispatch_ownership_generation": {"type": "integer", "minimum": 1},
     "executed_at": {"type": "string"},
     "evidence_references": {
       "type": "array",
