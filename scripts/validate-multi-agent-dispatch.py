@@ -135,6 +135,8 @@ def validate_multi_agent_dispatch(instance: Any) -> list[str]:
         path = f"$.dispatch_ownership_events[{index}]"
         if not isinstance(event, dict):
             errors.append(f"{path}: object is required")
+            previous_event = None
+            previous_time = None
             continue
 
         event_id = event.get("ownership_event_id")
@@ -172,21 +174,23 @@ def validate_multi_agent_dispatch(instance: Any) -> list[str]:
             if consumed_at is not None and event_time is not None and event_time < consumed_at:
                 errors.append(f"{path}.occurred_at: dispatch cannot be claimed before authority consumption")
         else:
-            assert previous_event is not None
-            if event_type != "transfer":
-                errors.append(f"{path}.event_type: ownership changes after the initial claim must be 'transfer'")
-            if event.get("previous_ownership_event_id") != previous_event.get("ownership_event_id"):
-                errors.append(f"{path}.previous_ownership_event_id: must point to the immediately prior ownership event")
-            previous_generation = previous_event.get("ownership_generation")
-            if isinstance(previous_generation, int) and not isinstance(previous_generation, bool):
-                if generation != previous_generation + 1:
-                    errors.append(f"{path}.ownership_generation: must increment exactly by one")
-            if actor_id == previous_event.get("actor_id"):
-                errors.append(f"{path}.actor_id: transfer must change the owning actor")
-            if event.get("transfer_basis") not in TRANSFER_BASES:
-                errors.append(f"{path}.transfer_basis: recognized transfer basis is required")
-            if previous_time is not None and event_time is not None and event_time <= previous_time:
-                errors.append(f"{path}.occurred_at: ownership events must be strictly time-ordered")
+            if previous_event is None:
+                errors.append(f"{path}: cannot validate transfer because the prior ownership event is malformed")
+            else:
+                if event_type != "transfer":
+                    errors.append(f"{path}.event_type: ownership changes after the initial claim must be 'transfer'")
+                if event.get("previous_ownership_event_id") != previous_event.get("ownership_event_id"):
+                    errors.append(f"{path}.previous_ownership_event_id: must point to the immediately prior ownership event")
+                previous_generation = previous_event.get("ownership_generation")
+                if isinstance(previous_generation, int) and not isinstance(previous_generation, bool):
+                    if generation != previous_generation + 1:
+                        errors.append(f"{path}.ownership_generation: must increment exactly by one")
+                if actor_id == previous_event.get("actor_id"):
+                    errors.append(f"{path}.actor_id: transfer must change the owning actor")
+                if event.get("transfer_basis") not in TRANSFER_BASES:
+                    errors.append(f"{path}.transfer_basis: recognized transfer basis is required")
+                if previous_time is not None and event_time is not None and event_time <= previous_time:
+                    errors.append(f"{path}.occurred_at: ownership events must be strictly time-ordered")
 
         previous_event = event
         previous_time = event_time
