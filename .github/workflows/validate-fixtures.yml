@@ -40,7 +40,15 @@ jobs:
       - name: Validate full end-to-end integrity trace
         run: python scripts/validate-end-to-end-integrity.py
 
-      - name: Smoke-test DI conformance CLI
+      - name: Validate multi-agent dispatch ownership continuity
+        run: python scripts/validate-multi-agent-dispatch.py
+
+      - name: Smoke-test DI conformance CLI v0.2
         run: |
-          python scripts/di-conformance.py fixtures/valid-end-to-end-integrity-v0.2.json --pretty > conformance-report.json
-          cat conformance-report.json
+          python scripts/di-conformance.py fixtures/valid-end-to-end-integrity-v0.2.json --pretty > conformance-report-v0.2.json
+          cat conformance-report-v0.2.json
+
+      - name: Smoke-test DI conformance CLI v0.3
+        run: |
+          python scripts/di-conformance.py fixtures/valid-multi-agent-dispatch-takeover-v0.3.json --profile multi-agent-dispatch-v0.3 --pretty > conformance-report-v0.3.json
+          cat conformance-report-v0.3.json

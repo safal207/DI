@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/safal207/DI/schemas/dispatch-ownership-event.schema.json",
+  "title": "Dispatch Ownership Event v0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "ownership_event_version",
+    "ownership_event_id",
+    "dispatch_id",
+    "event_type",
+    "actor_id",
+    "ownership_generation",
+    "occurred_at",
+    "evidence_references"
+  ],
+  "properties": {
+    "ownership_event_version": {"type": "string", "enum": ["0.1"]},
+    "ownership_event_id": {"type": "string", "minLength": 1},
+    "dispatch_id": {"type": "string", "minLength": 1},
+    "event_type": {"type": "string", "enum": ["claim", "transfer"]},
+    "actor_id": {"type": "string", "minLength": 1},
+    "ownership_generation": {"type": "integer", "minimum": 1},
+    "previous_ownership_event_id": {"type": "string", "minLength": 1},
+    "transfer_basis": {
+      "type": "string",
+      "enum": ["explicit_handoff", "orchestrator_reassignment", "lease_expiry"]
+    },
+    "occurred_at": {"type": "string", "minLength": 1},
+    "evidence_references": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "minItems": 1
+    }
+  }
+}

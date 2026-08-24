@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 """Run DI conformance validation against an external trace file.
 
-This is the product-facing wrapper around the canonical semantic validator.
-It emits a stable machine-readable report and exits non-zero on conformance
-failure.
+The CLI exposes stable machine-readable reports for supported semantic profiles
+and exits non-zero on conformance failure.
 """
 
 from __future__ import annotations
@@ -16,21 +15,32 @@ from types import ModuleType
 from typing import Any, Callable
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-VALIDATOR_PATH = SCRIPT_DIR / "validate-end-to-end-integrity.py"
-PROFILE = "end-to-end-integrity-v0.2"
+DEFAULT_PROFILE = "end-to-end-integrity-v0.2"
+PROFILE_VALIDATORS: dict[str, tuple[Path, str]] = {
+    "end-to-end-integrity-v0.2": (
+        SCRIPT_DIR / "validate-end-to-end-integrity.py",
+        "validate_end_to_end",
+    ),
+    "multi-agent-dispatch-v0.3": (
+        SCRIPT_DIR / "validate-multi-agent-dispatch.py",
+        "validate_multi_agent_dispatch",
+    ),
+}
 
 
-def load_validator() -> Callable[[Any], list[str]]:
-    spec = importlib.util.spec_from_file_location("di_end_to_end_validator", VALIDATOR_PATH)
+def load_validator(profile: str) -> Callable[[Any], list[str]]:
+    validator_path, function_name = PROFILE_VALIDATORS[profile]
+    module_name = "di_conformance_" + profile.replace("-", "_").replace(".", "_")
+    spec = importlib.util.spec_from_file_location(module_name, validator_path)
     if spec is None or spec.loader is None:
-        raise RuntimeError(f"cannot load validator from {VALIDATOR_PATH}")
+        raise RuntimeError(f"cannot load validator from {validator_path}")
 
     module: ModuleType = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
 
-    validator = getattr(module, "validate_end_to_end", None)
+    validator = getattr(module, function_name, None)
     if not callable(validator):
-        raise RuntimeError("validate_end_to_end() is missing from the canonical validator")
+        raise RuntimeError(f"{function_name}() is missing from {validator_path.name}")
     return validator
 
 
@@ -41,8 +51,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("trace", type=Path, help="Path to a JSON trace file")
     parser.add_argument(
         "--profile",
-        choices=[PROFILE],
-        default=PROFILE,
+        choices=sorted(PROFILE_VALIDATORS),
+        default=DEFAULT_PROFILE,
         help="Conformance profile to apply",
     )
     parser.add_argument(
@@ -53,10 +63,10 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def make_report(input_file: str, errors: list[str]) -> dict[str, Any]:
+def make_report(profile: str, input_file: str, errors: list[str]) -> dict[str, Any]:
     return {
         "report_version": "0.1",
-        "profile": PROFILE,
+        "profile": profile,
         "input_file": input_file,
         "status": "FAIL" if errors else "PASS",
         "error_count": len(errors),
@@ -72,12 +82,12 @@ def main() -> int:
     try:
         with trace_path.open("r", encoding="utf-8") as handle:
             instance = json.load(handle)
-        validator = load_validator()
+        validator = load_validator(args.profile)
         errors = validator(instance)
     except (OSError, json.JSONDecodeError, RuntimeError) as exc:
         errors = [f"input/validator error: {exc}"]
 
-    report = make_report(str(trace_path), errors)
+    report = make_report(args.profile, str(trace_path), errors)
     print(json.dumps(report, indent=2 if args.pretty else None, sort_keys=True))
     return 0 if not errors else 1
 
