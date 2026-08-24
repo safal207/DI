@@ -1,0 +1,80 @@
+{
+  "profile_version": "0.3",
+  "trace_id": "multi-agent.payment-recovery.takeover.001",
+  "execution_mode": "SAFE_RETRY",
+  "recovery_decision": {
+    "decision_id": "recovery.payment.safe-retry.multi-agent.001",
+    "selected_action": "SAFE_RETRY",
+    "authority_id": "authority.payment-recovery",
+    "authority_generation": 12
+  },
+  "authority_consumption_receipt": {
+    "consumption_version": "0.1",
+    "consumption_receipt_id": "consumption.payment-recovery.multi-agent.001",
+    "authority_receipt_id": "authority-receipt.payment-recovery.multi-agent.001",
+    "authority_id": "authority.payment-recovery",
+    "authority_generation": 12,
+    "recovery_decision_id": "recovery.payment.safe-retry.multi-agent.001",
+    "recovery_cycle_id": "cycle.payment-recovery.multi-agent.001",
+    "bound_execution_mode": "SAFE_RETRY",
+    "use_token": "use-token.payment-recovery.multi-agent.001",
+    "consumption_status": "consumed",
+    "consumed_at": "2026-08-24T05:00:02+00:00",
+    "dispatch_id": "dispatch.payment-recovery.multi-agent.001",
+    "evidence_references": [
+      "evidence://authority/consume/payment-recovery-multi-agent-001"
+    ]
+  },
+  "dispatch_ownership_events": [
+    {
+      "ownership_event_version": "0.1",
+      "ownership_event_id": "ownership.payment-recovery.001",
+      "dispatch_id": "dispatch.payment-recovery.multi-agent.001",
+      "event_type": "claim",
+      "actor_id": "worker.A",
+      "ownership_generation": 1,
+      "occurred_at": "2026-08-24T05:00:02.200000+00:00",
+      "evidence_references": [
+        "evidence://orchestrator/claim/worker-A"
+      ]
+    },
+    {
+      "ownership_event_version": "0.1",
+      "ownership_event_id": "ownership.payment-recovery.002",
+      "dispatch_id": "dispatch.payment-recovery.multi-agent.001",
+      "event_type": "transfer",
+      "actor_id": "worker.B",
+      "ownership_generation": 2,
+      "previous_ownership_event_id": "ownership.payment-recovery.001",
+      "transfer_basis": "explicit_handoff",
+      "occurred_at": "2026-08-24T05:00:04+00:00",
+      "evidence_references": [
+        "evidence://orchestrator/handoff/worker-A-to-worker-B"
+      ]
+    }
+  ],
+  "execution_receipt": {
+    "receipt_version": "0.1",
+    "receipt_id": "execution.payment-recovery.multi-agent.001",
+    "recovery_decision_id": "recovery.payment.safe-retry.multi-agent.001",
+    "source_cycle_id": "cycle.payment-attempt.failed.000",
+    "recovery_cycle_id": "cycle.payment-recovery.multi-agent.001",
+    "declared_execution_mode": "SAFE_RETRY",
+    "observed_execution_mode": "SAFE_RETRY",
+    "execution_status": "observed",
+    "authority_receipt_id": "authority-receipt.payment-recovery.multi-agent.001",
+    "authority_generation_at_execution": 12,
+    "authority_status_at_execution": "active",
+    "authority_consumption_receipt_id": "consumption.payment-recovery.multi-agent.001",
+    "use_token": "use-token.payment-recovery.multi-agent.001",
+    "dispatch_id": "dispatch.payment-recovery.multi-agent.001",
+    "actor_id": "worker.B",
+    "dispatch_ownership_event_id": "ownership.payment-recovery.002",
+    "dispatch_ownership_generation": 2,
+    "executed_at": "2026-08-24T05:00:05+00:00",
+    "evidence_references": [
+      "evidence://dispatch/payment-recovery-multi-agent-001",
+      "evidence://worker-B/execution-observed"
+    ]
+  }
+}
