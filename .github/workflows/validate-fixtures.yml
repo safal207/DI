@@ -27,3 +27,20 @@ jobs:
 
       - name: Validate use-time authority binding
         run: python scripts/validate-authority-binding.py
+
+      - name: Validate single-use authority consumption
+        run: python scripts/validate-authority-consumption.py
+
+      - name: Validate strategy path binding
+        run: python scripts/validate-strategy-binding.py
+
+      - name: Validate decision replanning after path invalidation
+        run: python scripts/validate-decision-replan.py
+
+      - name: Validate full end-to-end integrity trace
+        run: python scripts/validate-end-to-end-integrity.py
+
+      - name: Smoke-test DI conformance CLI
+        run: |
+          python scripts/di-conformance.py fixtures/valid-end-to-end-integrity-v0.2.json --pretty > conformance-report.json
+          cat conformance-report.json

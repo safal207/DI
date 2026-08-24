@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/safal207/DI/schemas/decision-replan-chain.schema.json",
+  "title": "Decision Replan Chain v0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "chain_version",
+    "replan_id",
+    "invalidated_decision_record_id",
+    "invalidated_path_id",
+    "invalidation_revalidation_id",
+    "invalidation_status",
+    "replacement_feasibility_id",
+    "replacement_feasible_path_ids",
+    "replacement_strategy_id",
+    "replacement_candidate_path_ids",
+    "replacement_decision_record_id",
+    "supersedes_record_id",
+    "replacement_selected_path_id",
+    "replacement_tip_transition_id",
+    "replacement_tip_path_id",
+    "evidence_references"
+  ],
+  "properties": {
+    "chain_version": {"type": "string", "enum": ["0.1"]},
+    "replan_id": {"type": "string"},
+    "invalidated_decision_record_id": {"type": "string"},
+    "invalidated_path_id": {"type": "string"},
+    "invalidation_revalidation_id": {"type": "string"},
+    "invalidation_status": {"type": "string", "enum": ["invalid", "unknown"]},
+    "replacement_feasibility_id": {"type": "string"},
+    "replacement_feasible_path_ids": {"type": "array", "items": {"type": "string"}},
+    "replacement_strategy_id": {"type": "string"},
+    "replacement_candidate_path_ids": {"type": "array", "items": {"type": "string"}},
+    "replacement_decision_record_id": {"type": "string"},
+    "supersedes_record_id": {"type": "string"},
+    "replacement_selected_path_id": {"type": "string"},
+    "replacement_tip_transition_id": {"type": "string"},
+    "replacement_tip_path_id": {"type": "string"},
+    "evidence_references": {"type": "array", "items": {"type": "string"}}
+  }
+}

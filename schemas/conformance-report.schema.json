@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/safal207/DI/schemas/conformance-report.schema.json",
+  "title": "DI Conformance Report v0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "report_version",
+    "profile",
+    "input_file",
+    "status",
+    "error_count",
+    "errors"
+  ],
+  "properties": {
+    "report_version": {"type": "string", "enum": ["0.1"]},
+    "profile": {"type": "string", "enum": ["end-to-end-integrity-v0.2"]},
+    "input_file": {"type": "string", "minLength": 1},
+    "status": {"type": "string", "enum": ["PASS", "FAIL"]},
+    "error_count": {"type": "integer", "minimum": 0},
+    "errors": {
+      "type": "array",
+      "items": {"type": "string"}
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {"status": {"const": "PASS"}},
+        "required": ["status"]
+      },
+      "then": {
+        "properties": {
+          "error_count": {"const": 0},
+          "errors": {"maxItems": 0}
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {"status": {"const": "FAIL"}},
+        "required": ["status"]
+      },
+      "then": {
+        "properties": {
+          "error_count": {"minimum": 1},
+          "errors": {"minItems": 1}
+        }
+      }
+    }
+  ]
+}

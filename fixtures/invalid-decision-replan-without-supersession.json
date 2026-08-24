@@ -1,0 +1,27 @@
+{
+  "chain_version": "0.1",
+  "replan_id": "replan.payment-recovery.invalid.001",
+  "invalidated_decision_record_id": "drp.payment-recovery.001",
+  "invalidated_path_id": "path.B.idempotent-replay",
+  "invalidation_revalidation_id": "revalidation.payment-recovery.invalid.001",
+  "invalidation_status": "invalid",
+  "replacement_feasibility_id": "di.feasibility.payment-recovery.002",
+  "replacement_feasible_path_ids": [
+    "path.A.read-existing",
+    "path.C.wait-for-evidence"
+  ],
+  "replacement_strategy_id": "strategy.payment-recovery.002",
+  "replacement_candidate_path_ids": [
+    "path.A.read-existing",
+    "path.C.wait-for-evidence"
+  ],
+  "replacement_decision_record_id": "drp.payment-recovery.002",
+  "supersedes_record_id": "drp.some-other-decision.999",
+  "replacement_selected_path_id": "path.C.wait-for-evidence",
+  "replacement_tip_transition_id": "tip.payment-recovery.002",
+  "replacement_tip_path_id": "path.C.wait-for-evidence",
+  "evidence_references": [
+    "evidence://idempotency-contract/no-longer-valid",
+    "evidence://replan/fresh-feasibility-assessment/002"
+  ]
+}
