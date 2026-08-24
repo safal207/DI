@@ -1,4 +1,4 @@
-# DI Conformance Test Kit v0.1
+# DI Conformance Test Kit v0.2
 
 Status: Draft developer interface
 
@@ -18,27 +18,38 @@ PASS or FAIL
 structured errors
 ```
 
-The first profile is:
+Supported profiles:
 
 ```text
 end-to-end-integrity-v0.2
+multi-agent-dispatch-v0.3
 ```
 
-It checks the complete chain from confirmed intent through feasibility, strategy, decision, transition, authority, execution, observed effect, fresh review, and next state.
+The first checks the complete decision-to-evidence chain.
+
+The second checks multi-agent ownership continuity after a mutation right has already been consumed.
 
 ## CLI
 
-Run:
+Default full-chain profile:
 
 ```bash
 python scripts/di-conformance.py path/to/trace.json --pretty
 ```
 
-Explicit profile:
+Explicit v0.2 profile:
 
 ```bash
 python scripts/di-conformance.py path/to/trace.json \
   --profile end-to-end-integrity-v0.2 \
+  --pretty
+```
+
+Multi-agent dispatch profile:
+
+```bash
+python scripts/di-conformance.py path/to/multi-agent-trace.json \
+  --profile multi-agent-dispatch-v0.3 \
   --pretty
 ```
 
@@ -53,8 +64,8 @@ Shape:
 ```json
 {
   "report_version": "0.1",
-  "profile": "end-to-end-integrity-v0.2",
-  "input_file": "path/to/trace.json",
+  "profile": "multi-agent-dispatch-v0.3",
+  "input_file": "path/to/multi-agent-trace.json",
   "status": "PASS",
   "error_count": 0,
   "errors": []
@@ -68,13 +79,13 @@ Example shape:
 ```json
 {
   "report_version": "0.1",
-  "profile": "end-to-end-integrity-v0.2",
-  "input_file": "path/to/trace.json",
+  "profile": "multi-agent-dispatch-v0.3",
+  "input_file": "path/to/multi-agent-trace.json",
   "status": "FAIL",
   "error_count": 2,
   "errors": [
-    "$.envelope.tip.selected_path_id: path substitution after commitment is forbidden",
-    "$.execution_receipt.dispatch_id: must exactly match consumed dispatch_id"
+    "$.execution_receipt.actor_id: only the latest dispatch owner may execute",
+    "$.execution_receipt.dispatch_id: worker takeover must preserve consumed dispatch_id"
   ]
 }
 ```
@@ -89,23 +100,19 @@ Machine-readable output is described by:
 schemas/conformance-report.schema.json
 ```
 
-## Canonical reference
+## Profile: end-to-end-integrity-v0.2
 
-The current reference trace is:
+Reference trace:
 
 ```text
 fixtures/valid-end-to-end-integrity-v0.2.json
 ```
 
-The profile implementation reuses:
+Implementation:
 
 ```text
 scripts/validate-end-to-end-integrity.py
 ```
-
-This avoids maintaining a second, weaker definition of the same invariants.
-
-## What a PASS means
 
 A PASS means that, according to the supplied trace:
 
@@ -131,7 +138,50 @@ AND
 review used the accepted fresh state generation
 ```
 
-It means the **recorded causal chain is internally conformant**.
+## Profile: multi-agent-dispatch-v0.3
+
+Reference trace:
+
+```text
+fixtures/valid-multi-agent-dispatch-takeover-v0.3.json
+```
+
+Implementation:
+
+```text
+scripts/validate-multi-agent-dispatch.py
+```
+
+A PASS means that, according to the supplied trace:
+
+```text
+one recovery decision was bound to one consumed dispatch
+AND
+ownership started with one generation-1 claim
+AND
+every ownership change was an explicit linear transfer
+AND
+ownership generations increased exactly by one
+AND
+the dispatch_id remained stable across worker changes
+AND
+execution was performed by the latest recorded owner
+AND
+execution bound to the latest ownership event and generation
+```
+
+The central v0.3 law is:
+
+```text
+new worker != new permission
+```
+
+See:
+
+```text
+docs/multi-agent-dispatch-integrity-v0.3.md
+schemas/dispatch-ownership-event.schema.json
+```
 
 ## What a PASS does not mean
 
@@ -140,11 +190,14 @@ PASS does not independently prove:
 ```text
 external evidence is truthful
 runtime database operations were atomic
+a distributed lock actually existed
 provider APIs behaved exactly as claimed
 human intent was ethically obtained outside the represented DIF confirmation
 ```
 
-Those are evidence, runtime, or upstream protocol boundaries.
+Those are evidence, runtime, coordination, or upstream protocol boundaries.
+
+In particular, the multi-agent ownership event chain is **evidence of ownership continuity**, not a distributed mutex by itself.
 
 ## Integration pattern
 
@@ -153,7 +206,7 @@ A CI pipeline can treat the command as a gate:
 ```text
 produce trace.json
 ↓
-di-conformance.py trace.json
+di-conformance.py trace.json --profile <profile>
 ↓
 exit 0 → continue
 exit 1 → block / inspect errors
@@ -161,19 +214,11 @@ exit 1 → block / inspect errors
 
 An agent evaluator can store the JSON report next to the trace as an auditable conformance artifact.
 
-## Future profiles
+## Profile design rule
 
-The CLI intentionally exposes a `--profile` boundary so later profiles can be added without changing the basic interface.
+New profiles should reuse canonical protocol invariants and remain explicit about their scope.
 
-Possible future profiles may cover narrower slices such as:
-
-```text
-strategy-path-binding
-recovery-authority-binding
-state-effect-freshness
-```
-
-They should reuse the same canonical invariants rather than fork their semantics.
+A narrow profile may prove one seam without claiming that every upstream or downstream property was independently verified.
 
 ## Core idea
 
@@ -182,11 +227,11 @@ protocol documents
 ↓
 validators
 ↓
-conformance profile
+conformance profiles
 ↓
-external trace
+external traces
 ↓
 portable PASS / FAIL evidence
 ```
 
-This is the point where the architecture becomes testable by systems outside the repository.
+This is the point where the architecture becomes testable by systems outside the repository, including multi-agent systems where the executor itself can change over time.
