@@ -45,6 +45,9 @@
     "actor_id": {"type": "string"},
     "dispatch_ownership_event_id": {"type": "string"},
     "dispatch_ownership_generation": {"type": "integer", "minimum": 1},
+    "dispatch_lease_id": {"type": "string"},
+    "dispatch_fencing_token": {"type": "integer", "minimum": 1},
+    "dispatch_attempt_id": {"type": "string"},
     "executed_at": {"type": "string"},
     "evidence_references": {
       "type": "array",

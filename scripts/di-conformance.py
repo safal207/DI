@@ -25,6 +25,10 @@ PROFILE_VALIDATORS: dict[str, tuple[Path, str]] = {
         SCRIPT_DIR / "validate-multi-agent-dispatch.py",
         "validate_multi_agent_dispatch",
     ),
+    "lease-split-brain-v0.4": (
+        SCRIPT_DIR / "validate-lease-split-brain.py",
+        "validate_lease_split_brain",
+    ),
 }
 
 

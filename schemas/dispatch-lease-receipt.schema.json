@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/safal207/DI/schemas/dispatch-lease-receipt.schema.json",
+  "title": "Dispatch Lease Receipt v0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "lease_version",
+    "lease_id",
+    "dispatch_id",
+    "actor_id",
+    "ownership_event_id",
+    "ownership_generation",
+    "fencing_token",
+    "issued_at",
+    "expires_at",
+    "evidence_references"
+  ],
+  "properties": {
+    "lease_version": {"type": "string", "enum": ["0.1"]},
+    "lease_id": {"type": "string", "minLength": 1},
+    "dispatch_id": {"type": "string", "minLength": 1},
+    "actor_id": {"type": "string", "minLength": 1},
+    "ownership_event_id": {"type": "string", "minLength": 1},
+    "ownership_generation": {"type": "integer", "minimum": 1},
+    "fencing_token": {"type": "integer", "minimum": 1},
+    "issued_at": {"type": "string", "minLength": 1},
+    "expires_at": {"type": "string", "minLength": 1},
+    "evidence_references": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "minItems": 1
+    }
+  }
+}

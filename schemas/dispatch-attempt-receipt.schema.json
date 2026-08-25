@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/safal207/DI/schemas/dispatch-attempt-receipt.schema.json",
+  "title": "Dispatch Attempt Receipt v0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "attempt_version",
+    "attempt_id",
+    "dispatch_id",
+    "actor_id",
+    "ownership_event_id",
+    "ownership_generation",
+    "lease_id",
+    "fencing_token",
+    "attempted_at",
+    "outcome",
+    "reason",
+    "evidence_references"
+  ],
+  "properties": {
+    "attempt_version": {"type": "string", "enum": ["0.1"]},
+    "attempt_id": {"type": "string", "minLength": 1},
+    "dispatch_id": {"type": "string", "minLength": 1},
+    "actor_id": {"type": "string", "minLength": 1},
+    "ownership_event_id": {"type": "string", "minLength": 1},
+    "ownership_generation": {"type": "integer", "minimum": 1},
+    "lease_id": {"type": "string", "minLength": 1},
+    "fencing_token": {"type": "integer", "minimum": 1},
+    "attempted_at": {"type": "string", "minLength": 1},
+    "outcome": {"type": "string", "enum": ["accepted", "rejected"]},
+    "reason": {
+      "type": "string",
+      "enum": [
+        "accepted_current_lease",
+        "stale_fencing_token",
+        "lease_expired",
+        "not_current_owner",
+        "lease_unknown",
+        "ownership_superseded"
+      ]
+    },
+    "evidence_references": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "minItems": 1
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {"outcome": {"const": "accepted"}},
+        "required": ["outcome"]
+      },
+      "then": {
+        "properties": {"reason": {"const": "accepted_current_lease"}}
+      }
+    }
+  ]
+}

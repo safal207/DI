@@ -43,6 +43,9 @@ jobs:
       - name: Validate multi-agent dispatch ownership continuity
         run: python scripts/validate-multi-agent-dispatch.py
 
+      - name: Validate lease expiry and split-brain fencing
+        run: python scripts/validate-lease-split-brain.py
+
       - name: Smoke-test DI conformance CLI v0.2
         run: |
           python scripts/di-conformance.py fixtures/valid-end-to-end-integrity-v0.2.json --pretty > conformance-report-v0.2.json
@@ -52,3 +55,8 @@ jobs:
         run: |
           python scripts/di-conformance.py fixtures/valid-multi-agent-dispatch-takeover-v0.3.json --profile multi-agent-dispatch-v0.3 --pretty > conformance-report-v0.3.json
           cat conformance-report-v0.3.json
+
+      - name: Smoke-test DI conformance CLI v0.4
+        run: |
+          python scripts/di-conformance.py fixtures/valid-lease-split-brain-recovery-v0.4.json --profile lease-split-brain-v0.4 --pretty > conformance-report-v0.4.json
+          cat conformance-report-v0.4.json
