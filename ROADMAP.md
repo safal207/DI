@@ -8,7 +8,7 @@ This roadmap keeps DI focused as a protocol and conformance repository rather th
 
 ## Current Architecture
 
-The repository now validates an evidence chain that has grown beyond the original seed schemas:
+The repository validates an evidence chain around decision and transition integrity:
 
 ```text
 Intent
@@ -34,7 +34,7 @@ Each layer remains an evidence/conformance boundary. DI does not execute the rep
 
 ## v0.1 — Seed Protocol Foundation
 
-Status: complete.
+Status: **complete**.
 
 Delivered:
 
@@ -46,7 +46,7 @@ Delivered:
 
 ## v0.2 — End-to-End Decision Integrity
 
-Status: complete.
+Status: **complete**.
 
 Delivered:
 
@@ -59,7 +59,7 @@ Delivered:
 
 ## v0.3 — Multi-Agent Dispatch Ownership
 
-Status: complete.
+Status: **complete**.
 
 Delivered:
 
@@ -67,11 +67,11 @@ Delivered:
 - append-only ownership events;
 - explicit takeover semantics;
 - execution binding to the latest recorded owner;
-- multi-agent dispatch conformance profile.
+- `multi-agent-dispatch-v0.3` conformance profile.
 
 ## v0.4 — Lease and Split-Brain Fencing
 
-Status: complete and merged.
+Status: **complete**.
 
 Delivered:
 
@@ -84,18 +84,9 @@ Delivered:
 
 ## v0.5 — Ambiguous Commit Recovery
 
-Status: active.
+Status: **complete and validated**.
 
-Goal:
-
-```text
-correct executor admitted
-→ side effect may commit
-→ acknowledgement lost
-→ commit state resolved without creating a second effect
-```
-
-Planned / in progress:
+Delivered:
 
 - stable `logical_operation_id` and `effect_key`;
 - ordered commit-outcome receipts;
@@ -103,6 +94,7 @@ Planned / in progress:
 - one committed logical operation → one committed effect identity;
 - safe next-action rules for committed / not committed / still unknown;
 - state-effect evidence before success closure;
+- mutation checks for key drift, contradictory resolution, duplicate committed effects, unsafe retries, and unsupported success;
 - `ambiguous-commit-v0.5` conformance profile and CI smoke test.
 
 Central laws:
@@ -111,21 +103,37 @@ Central laws:
 transport outcome != commit outcome
 unknown commit != not committed
 retry != new effect identity
+one committed logical operation -> one committed effect identity
 ```
 
-## Stabilization After v0.5
+## v0.5 Stabilization
 
-Before adding another architecture layer:
+Status: **active**.
 
-- reconcile README, roadmap, manifest, and conformance docs;
+Goals:
+
+- align README, roadmap, release notes, manifest, and conformance documentation;
+- run the full profile ladder from one green `main` workflow;
+- add a read-only credential-boundary workflow pinned to an immutable provider revision;
+- resolve stale PRs without discarding useful contributor work;
 - keep one canonical profile ladder;
-- inspect stale pull requests and old contributor issues;
-- publish a stable checkpoint only from a green `main` workflow;
-- collect one external sandbox trace without overstating provider conformance.
+- prepare a `v0.5-draft` release marker only from an exact green `main` commit.
 
-## Adoption and Use Cases
+Release gate:
 
-Status: exploratory.
+```text
+stabilization merged
+AND
+Validate DI fixtures = success on merge commit
+AND
+FCRP Credential Boundary = success on merge commit
+AND
+no known release-blocking regression
+```
+
+## Adoption and External Validation
+
+Status: **exploratory**.
 
 Priority use cases:
 
@@ -136,7 +144,33 @@ Priority use cases:
 - incident response and rollback;
 - human approval at authority boundaries.
 
+Next evidence target:
+
+- collect one provider sandbox or test-mode trace;
+- translate only observable facts into a DI conformance fixture;
+- preserve the distinction between provider guarantees, our inference, observed evidence, and runtime assumptions;
+- avoid claiming provider endorsement or conformance.
+
 External products are validation cases, not members of the DI/DIF/DRP/TIP stack.
+
+## After the v0.5 checkpoint
+
+Do not add another architecture layer automatically.
+
+Candidate work should first answer one of these questions:
+
+1. Does a real external trace reveal an unmodelled integrity seam?
+2. Is a current invariant too weak or too hard to apply?
+3. Can the conformance interface become easier to consume without becoming an execution platform?
+4. Does the protocol need RFC clarification rather than another schema?
+
+Possible next directions:
+
+- packaged conformance artifacts for CI systems;
+- clearer stable error codes;
+- external trace adapters that do not import provider secrets;
+- a compact benchmark across several recovery failure modes;
+- RFC-0002 only after evidence justifies terminology or semantic changes.
 
 ## Boundaries
 
