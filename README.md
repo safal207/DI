@@ -1,237 +1,268 @@
 # Doability Intelligence (DI)
 
-DI maps what can and cannot be done before decisions become commitments.
+[![Validate DI fixtures](https://github.com/safal207/DI/actions/workflows/validate-fixtures.yml/badge.svg)](https://github.com/safal207/DI/actions/workflows/validate-fixtures.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
+**Current checkpoint:** v0.5 stabilization candidate. The implementation is merged and validated; a Git tag or GitHub Release has not yet been created.
+
+DI maps what can and cannot be done before a decision becomes a commitment.
+
+> **Do not promise action until limits are understood.**
 
 По-русски:
 
-> DI описывает, что возможно и невозможно, прежде чем решение станет обязательством.
+> **Не обещай действие, пока не понятны возможности и границы.**
 
-## Core Thesis
+## What DI is
 
-Intelligent systems should not promise, plan, execute, or commit to an action before understanding the limits around that action.
+DI is a narrow pre-decision layer for clarifying:
 
-DI is a narrow pre-decision layer for clarifying capabilities, limitations, constraints, risks, unknowns, and feasible action paths.
+- capabilities;
+- permissions;
+- limitations;
+- constraints;
+- risks and unknowns;
+- reversible and blocked paths;
+- whether a decision is ready to become a commitment.
 
-## One-Line Principle
-
-> Do not promise action until limits are understood.
-
-## Why DI Exists
-
-Many systems fail not because they make the wrong decision, but because they act before understanding their own boundaries.
-
-A request may look simple:
-
-> Do this.
-
-But before action, a system must ask:
-
-- Is this technically possible?
-- Is this permitted?
-- Is this safe?
-- Is this reversible?
-- Is the required context available?
-- Are there hidden constraints?
-- Should this be escalated to a human?
-- Is the system allowed to even attempt this?
-
-DI is the layer that maps these questions before a decision becomes a commitment.
-
-## What DI Is
-
-DI is:
-
-- a pre-decision layer,
-- a capability boundary model,
-- a limitation mapping protocol,
-- a feasibility reasoning layer,
-- a constraint clarification mechanism.
-
-## What DI Is Not
-
-DI is not:
-
-- a task manager,
-- an execution engine,
-- a decision log,
-- a policy engine,
-- a productivity system,
-- a SaaS platform,
-- a replacement for human judgment.
-
-DI does not decide.
-
-DI clarifies whether action is possible, constrained, blocked, unknown, or conditionally feasible.
-
-## Relation to DIF and DRP
-
-DIF and DRP define two sides of a responsible decision system:
+DI does not execute the action and does not silently turn technical capability into permission.
 
 ```text
-DIF — do not act until intent is understood.
-DRP — do not forget why a decision was made.
+request
+→ capability and limitation mapping
+→ feasible / conditional / blocked / unknown
+→ decision boundary
 ```
 
-DI adds the third side:
+## Decision and transition integrity stack
+
+DI cooperates with three independent projects:
 
 ```text
-DI — do not promise action until limits are understood.
+DIF → clarify human intent
+DI  → clarify feasibility and limits
+DRP → preserve the committed decision and rationale
+TIP → reason about the transition and review the observed result
 ```
 
-Together:
+Canonical repositories:
+
+- [DIF / DeepIntent Funnel](https://github.com/safal207/DIF)
+- [DI / Doability Intelligence](https://github.com/safal207/DI)
+- [DRP / Decision Record Protocol](https://github.com/safal207/DRP)
+- [TIP / Transition Intelligence Protocol](https://github.com/safal207/transition-intelligence-protocol)
+
+The projects remain separate:
 
 ```text
-DIF → clarify intent
-DI  → clarify limits
-DRP → commit decision
+DIF != DI
+DI  != DRP
+DRP != TIP
+TIP != execution engine
 ```
 
-## Related Projects
+The cross-repository architecture is documented in [`docs/decision-transition-integrity-stack.md`](docs/decision-transition-integrity-stack.md).
 
-DI is part of a small decision-integrity stack:
+## Current validated architecture
+
+The repository now contains provider-neutral conformance profiles for a wider evidence chain around DI:
 
 ```text
-DIF → clarify intent
-DI  → clarify limits
-DRP → commit decision
+Intent
+→ Feasibility
+→ Strategy
+→ Decision
+→ Path Revalidation
+→ Transition
+→ Use-Time Authority
+→ Authority Consumption
+→ Dispatch Ownership
+→ Lease / Fencing Epoch
+→ Dispatch Admission
+→ Execution
+→ Logical Operation Identity
+→ Commit Outcome Resolution
+→ State Effect
+→ Fresh Review
+→ Next State
 ```
 
-- [DIF / DeepIntent Funnel](https://github.com/safal207/DIF) — clarifies raw human signals into structured intent.
-- [DI / Doability Intelligence](https://github.com/safal207/DI) — maps capabilities, limitations, constraints, and feasible action paths before commitment.
-- [DRP / Decision Record Protocol](https://github.com/safal207/DRP) — records committed decisions with rationale, responsibility, and causal links.
+This is evidence and conformance tooling. It is not a production transaction coordinator or distributed runtime.
 
-Adjacent protocol:
+## Profile ladder
 
-- [TIP / Transition Intelligence Protocol](https://github.com/safal207/transition-intelligence-protocol) — studies transitions between states, including readiness, ambiguity, and safe movement from one state to another.
+| Profile | Protects against |
+|---|---|
+| `end-to-end-integrity-v0.2` | intent, path, authority, execution, state-effect, and review drift |
+| `multi-agent-dispatch-v0.3` | a new worker silently receiving a new mutation permission |
+| `lease-split-brain-v0.4` | a stale worker crossing the side-effect boundary after takeover |
+| `ambiguous-commit-v0.5` | a lost acknowledgement being mistaken for a failed commit and creating a second effect |
 
-Cross-repo architecture note:
-
-- [`docs/decision-transition-integrity-stack.md`](docs/decision-transition-integrity-stack.md) — defines how DIF, DI, DRP, and TIP cooperate while keeping their protocol boundaries separate, including handoff invariants and an anonymous financial walkthrough.
-
-Each repository should stay narrow. DIF should not become DI. DI should not become DRP. DRP should not become an execution engine. TIP should not replace the decision stack; it should describe transition dynamics around it.
-
-## Minimal Flow
+The v0.5 central laws are:
 
 ```text
-Raw signal / request
-→ DIF: clarify intent
-→ DI: clarify capabilities, limitations, constraints, and feasible paths
-→ DRP: record the committed decision
+transport outcome != commit outcome
+unknown commit != not committed
+retry != new effect identity
+one committed logical operation -> one committed effect identity
 ```
 
-## Repository Structure
+See [`docs/decision-transition-integrity-stack-v0.5.md`](docs/decision-transition-integrity-stack-v0.5.md) and [`docs/ambiguous-commit-integrity-v0.5.md`](docs/ambiguous-commit-integrity-v0.5.md).
 
-```text
-DI/
-├── README.md
-├── CONTRIBUTING.md
-├── ROADMAP.md
-├── docs/
-│   ├── rfc-0001.md
-│   ├── concept.md
-│   ├── capability-boundaries.md
-│   ├── limitation-model.md
-│   ├── relation-to-dif-and-drp.md
-│   └── decision-transition-integrity-stack.md
-├── schemas/
-│   ├── capability.schema.json
-│   ├── limitation.schema.json
-│   └── feasibility-check.schema.json
-├── fixtures/
-│   ├── valid-capability.json
-│   ├── valid-limitation.json
-│   ├── valid-feasibility-check.json
-│   └── invalid-feasibility-missing-request.json
-├── scripts/
-│   └── validate-fixtures.py
-├── .github/
-│   └── workflows/
-│       └── validate-fixtures.yml
-└── examples/
-    ├── ai-agent-support.md
-    ├── startup-plan.md
-    └── qa-automation.md
-```
+## Quick start
 
-## Documentation
+The repository uses Python standard-library validators.
 
-- [`docs/rfc-0001.md`](docs/rfc-0001.md) — draft RFC-style specification for DI v0.1.
-- [`docs/concept.md`](docs/concept.md) — defines DI as the discipline of understanding what can and cannot be done before commitment.
-- [`docs/capability-boundaries.md`](docs/capability-boundaries.md) — explains why technical capability is not permission.
-- [`docs/limitation-model.md`](docs/limitation-model.md) — defines explicit limitation categories and severity levels.
-- [`docs/relation-to-dif-and-drp.md`](docs/relation-to-dif-and-drp.md) — positions DI between DIF and DRP.
-- [`docs/decision-transition-integrity-stack.md`](docs/decision-transition-integrity-stack.md) — cross-repo architecture for `DIF → DI → DRP` with TIP as the adjacent transition/review protocol.
-
-## Schemas
-
-- [`schemas/capability.schema.json`](schemas/capability.schema.json) — minimal capability record schema.
-- [`schemas/limitation.schema.json`](schemas/limitation.schema.json) — minimal limitation record schema.
-- [`schemas/feasibility-check.schema.json`](schemas/feasibility-check.schema.json) — minimal feasibility-check schema.
-
-## Fixtures
-
-- [`fixtures/valid-capability.json`](fixtures/valid-capability.json) — expected to pass capability schema validation.
-- [`fixtures/valid-limitation.json`](fixtures/valid-limitation.json) — expected to pass limitation schema validation.
-- [`fixtures/valid-feasibility-check.json`](fixtures/valid-feasibility-check.json) — expected to pass feasibility-check schema validation.
-- [`fixtures/invalid-feasibility-missing-request.json`](fixtures/invalid-feasibility-missing-request.json) — expected to fail feasibility-check schema validation.
-
-See [`MANIFEST.md`](MANIFEST.md) for the fixture map.
-
-## Validation
-
-Run locally:
+Run the full fixture suite:
 
 ```bash
 python scripts/validate-fixtures.py
+python scripts/validate-recovery-binding.py
+python scripts/validate-authority-binding.py
+python scripts/validate-authority-consumption.py
+python scripts/validate-strategy-binding.py
+python scripts/validate-decision-replan.py
+python scripts/validate-end-to-end-integrity.py
+python scripts/validate-multi-agent-dispatch.py
+python scripts/validate-lease-split-brain.py
+python scripts/validate-ambiguous-commit.py
 ```
 
-CI runs the same validator on every push to `main` and on every pull request.
+Run a machine-readable conformance check:
 
-The validator is intentionally minimal and dependency-free. It checks the current seed fixtures against the current seed schemas. It is not a full JSON Schema 2020-12 implementation.
+```bash
+python scripts/di-conformance.py \
+  fixtures/valid-ambiguous-commit-recovery-v0.5.json \
+  --profile ambiguous-commit-v0.5 \
+  --pretty
+```
+
+Expected shape:
+
+```json
+{
+  "error_count": 0,
+  "errors": [],
+  "profile": "ambiguous-commit-v0.5",
+  "status": "PASS"
+}
+```
+
+The exact report also includes `report_version` and `input_file`.
+
+## What PASS means
+
+A PASS means the supplied trace satisfies the selected profile's structural and semantic invariants.
+
+For v0.5, that includes:
+
+- one stable logical-operation identity;
+- one stable effect key across ambiguous recovery;
+- ordered commit observations;
+- no silent conversion of `unknown` into `not_committed`;
+- a next action compatible with the resolved commit state;
+- matching state-effect evidence before success closure.
+
+## What PASS does not mean
+
+A PASS does not independently prove that:
+
+- external evidence is truthful;
+- a database or provider idempotency store was atomic;
+- a lease service enforced fencing at runtime;
+- a transaction was exactly-once;
+- a distributed lock existed;
+- network evidence was complete.
+
+Those remain runtime, evidence, and provider boundaries.
+
+## Key documentation
+
+- [`docs/rfc-0001.md`](docs/rfc-0001.md) — original DI specification seed.
+- [`docs/concept.md`](docs/concept.md) — DI concept and boundaries.
+- [`docs/relation-to-dif-and-drp.md`](docs/relation-to-dif-and-drp.md) — DI's place between intent and commitment.
+- [`docs/decision-transition-integrity-stack.md`](docs/decision-transition-integrity-stack.md) — cross-stack architecture.
+- [`docs/conformance-test-kit.md`](docs/conformance-test-kit.md) — CLI profiles and report contract.
+- [`docs/lease-split-brain-integrity-v0.4.md`](docs/lease-split-brain-integrity-v0.4.md) — lease and fencing semantics.
+- [`docs/ambiguous-commit-integrity-v0.5.md`](docs/ambiguous-commit-integrity-v0.5.md) — lost-acknowledgement recovery.
+- [`docs/case-study-stripe-payment-recovery.md`](docs/case-study-stripe-payment-recovery.md) — public-documentation mapping, not a live Stripe integration.
+- [`RELEASE_NOTES.md`](RELEASE_NOTES.md) — v0.5 stabilization scope and release gate.
+- [`ROADMAP.md`](ROADMAP.md) — current maturity and next priorities.
+
+## Machine-readable artifacts
+
+Important schemas include:
+
+- [`schemas/decision-transition-envelope.schema.json`](schemas/decision-transition-envelope.schema.json)
+- [`schemas/recovery-decision-matrix.schema.json`](schemas/recovery-decision-matrix.schema.json)
+- [`schemas/use-time-authority-receipt.schema.json`](schemas/use-time-authority-receipt.schema.json)
+- [`schemas/authority-consumption-receipt.schema.json`](schemas/authority-consumption-receipt.schema.json)
+- [`schemas/dispatch-ownership-event.schema.json`](schemas/dispatch-ownership-event.schema.json)
+- [`schemas/dispatch-lease-receipt.schema.json`](schemas/dispatch-lease-receipt.schema.json)
+- [`schemas/dispatch-attempt-receipt.schema.json`](schemas/dispatch-attempt-receipt.schema.json)
+- [`schemas/logical-operation.schema.json`](schemas/logical-operation.schema.json)
+- [`schemas/commit-outcome-receipt.schema.json`](schemas/commit-outcome-receipt.schema.json)
+- [`schemas/commit-resolution.schema.json`](schemas/commit-resolution.schema.json)
+- [`schemas/state-effect-receipt.schema.json`](schemas/state-effect-receipt.schema.json)
+- [`schemas/conformance-report.schema.json`](schemas/conformance-report.schema.json)
+
+See [`MANIFEST.md`](MANIFEST.md) for the current fixture and validator map.
 
 ## Examples
 
-DI is demonstrated through practical feasibility checks:
+- [`examples/ai-agent-support.md`](examples/ai-agent-support.md)
+- [`examples/startup-plan.md`](examples/startup-plan.md)
+- [`examples/qa-automation.md`](examples/qa-automation.md)
+- [`examples/personal-productivity-assistant.md`](examples/personal-productivity-assistant.md) — adapted from the first-time contribution in PR #9.
 
-- [`examples/ai-agent-support.md`](examples/ai-agent-support.md) — maps support-agent capabilities, account-permission boundaries, blocked actions, and DRP readiness.
-- [`examples/startup-plan.md`](examples/startup-plan.md) — maps startup revenue ambition into market, capital, founder-capacity, and validation constraints.
-- [`examples/qa-automation.md`](examples/qa-automation.md) — maps QA automation feasibility across technical, operational, knowledge, and risk boundaries.
+Examples describe feasibility boundaries. They do not grant real-world authority.
 
-Each example follows the same pattern:
+## Credential boundary
+
+The repository also runs a read-only credential-boundary scan through a reusable ContractGraph-QA workflow pinned to an immutable commit. The caller grants only:
 
 ```text
-Request
-→ DIF Analysis / inferred intent
-→ DI Feasibility Assessment
-→ Boundary Assessment
-→ Limitations
-→ Feasible Paths
-→ Blocked Actions
-→ Critical Unknowns
-→ Recommendation
-→ DRP Readiness
+contents: read
 ```
+
+The scan does not add, read, or rotate external credentials. Its purpose is to detect credential material accidentally crossing the tracked repository boundary.
+
+## External validation rule
+
+Companies, providers, and public APIs are validation cases, not members of DI, DIF, DRP, or TIP.
+
+A named case must distinguish clearly between:
+
+```text
+public provider guarantee
+our inference from that guarantee
+observed sandbox evidence
+unverified runtime assumption
+```
+
+## Project status
+
+- v0.1 seed protocol: complete.
+- v0.2 end-to-end integrity: complete.
+- v0.3 multi-agent ownership: complete.
+- v0.4 lease and split-brain fencing: complete.
+- v0.5 ambiguous commit recovery: implemented and validated.
+- stabilization and public release marker: in progress.
+
+DI remains intentionally provider-neutral, inspectable, and fail-closed on broken identity chains.
 
 ## Contributing
 
-DI is open to focused contributions that keep the repository narrow, protocol-like, and reviewable.
+Focused contributions are welcome. Useful areas include:
 
-Good first contribution areas:
+- realistic positive and negative traces;
+- clearer validator errors;
+- external sandbox mappings with accurate attribution;
+- protocol terminology and documentation consistency;
+- narrow conformance profiles that reuse existing invariants.
 
-- improve examples,
-- add realistic fixtures,
-- clarify terminology,
-- improve validator messages,
-- review RFC-0001 open questions.
+Start with [`CONTRIBUTING.md`](CONTRIBUTING.md) and the open `good first issue` / `help wanted` tasks.
 
-Start with:
+## License
 
-- [`CONTRIBUTING.md`](CONTRIBUTING.md) — contribution guide and PR expectations.
-- [`ROADMAP.md`](ROADMAP.md) — current development phases and entry points.
-- issues labeled `good first issue` or `help wanted`.
-
-## Status
-
-Draft / seed repository.
-
-This repository preserves DI as a narrow, clean concept: a layer for understanding capabilities, limitations, constraints, and feasibility before decisions become commitments.
+MIT — see [`LICENSE`](LICENSE).
