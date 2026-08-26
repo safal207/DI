@@ -29,6 +29,10 @@ PROFILE_VALIDATORS: dict[str, tuple[Path, str]] = {
         SCRIPT_DIR / "validate-lease-split-brain.py",
         "validate_lease_split_brain",
     ),
+    "ambiguous-commit-v0.5": (
+        SCRIPT_DIR / "validate-ambiguous-commit.py",
+        "validate_ambiguous_commit",
+    ),
 }
 
 

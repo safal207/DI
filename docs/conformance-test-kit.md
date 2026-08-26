@@ -1,4 +1,4 @@
-# DI Conformance Test Kit v0.3
+# DI Conformance Test Kit v0.5
 
 Status: Draft developer interface
 
@@ -24,6 +24,7 @@ Supported profiles:
 end-to-end-integrity-v0.2
 multi-agent-dispatch-v0.3
 lease-split-brain-v0.4
+ambiguous-commit-v0.5
 ```
 
 The profiles are additive in scope:
@@ -32,6 +33,7 @@ The profiles are additive in scope:
 v0.2 → decision-to-evidence integrity
 v0.3 → multi-agent ownership continuity
 v0.4 → lease expiry + fencing against stale executors
+v0.5 → ambiguous commit resolution + stable effect identity
 ```
 
 ## CLI
@@ -66,6 +68,14 @@ python scripts/di-conformance.py path/to/lease-trace.json \
   --pretty
 ```
 
+Ambiguous commit profile:
+
+```bash
+python scripts/di-conformance.py path/to/commit-trace.json \
+  --profile ambiguous-commit-v0.5 \
+  --pretty
+```
+
 A conforming trace exits `0`.
 
 A non-conforming trace exits `1`.
@@ -77,8 +87,8 @@ Shape:
 ```json
 {
   "report_version": "0.1",
-  "profile": "lease-split-brain-v0.4",
-  "input_file": "path/to/lease-trace.json",
+  "profile": "ambiguous-commit-v0.5",
+  "input_file": "path/to/commit-trace.json",
   "status": "PASS",
   "error_count": 0,
   "errors": []
@@ -92,13 +102,13 @@ Example shape:
 ```json
 {
   "report_version": "0.1",
-  "profile": "lease-split-brain-v0.4",
-  "input_file": "path/to/lease-trace.json",
+  "profile": "ambiguous-commit-v0.5",
+  "input_file": "path/to/commit-trace.json",
   "status": "FAIL",
   "error_count": 2,
   "errors": [
-    "$.dispatch_attempt_receipts: exactly one attempt may be accepted, got 2",
-    "$.execution_receipt.dispatch_fencing_token: must bind to accepted attempt fencing token"
+    "$.commit_resolution.selected_next_action: committed effect may not authorize another mutation",
+    "$.commit_resolution.next_effect_key: committed effect must not mint another mutation key"
   ]
 }
 ```
@@ -250,6 +260,59 @@ schemas/dispatch-lease-receipt.schema.json
 schemas/dispatch-attempt-receipt.schema.json
 ```
 
+## Profile: ambiguous-commit-v0.5
+
+Reference trace:
+
+```text
+fixtures/valid-ambiguous-commit-recovery-v0.5.json
+```
+
+Implementation:
+
+```text
+scripts/validate-ambiguous-commit.py
+```
+
+This profile reuses the complete v0.4 validator and adds post-admission commit semantics.
+
+A PASS means that, according to the supplied trace:
+
+```text
+v0.4 lease/fencing admission still holds
+AND
+one stable logical operation identity is preserved
+AND
+all commit observations carry the same effect key
+AND
+transport uncertainty is not treated as proof of failure
+AND
+authoritative commit history is non-contradictory
+AND
+one committed logical operation resolves to one effect identity
+AND
+the selected next action matches committed / not committed / still unknown
+AND
+committed closure has matching state-effect evidence
+```
+
+The central v0.5 laws are:
+
+```text
+transport outcome != commit outcome
+unknown commit != not committed
+retry != new effect identity
+```
+
+See:
+
+```text
+docs/ambiguous-commit-integrity-v0.5.md
+schemas/logical-operation.schema.json
+schemas/commit-outcome-receipt.schema.json
+schemas/commit-resolution.schema.json
+```
+
 ## What a PASS does not mean
 
 PASS does not independently prove:
@@ -258,6 +321,7 @@ PASS does not independently prove:
 external evidence is truthful
 runtime database operations were atomic
 a distributed lock or lease service actually enforced the trace
+an idempotency store or transaction coordinator was correct
 provider APIs behaved exactly as claimed
 human intent was ethically obtained outside the represented DIF confirmation
 ```
@@ -270,6 +334,7 @@ In particular:
 ownership event chain != distributed mutex
 lease receipt != runtime lease implementation
 fencing evidence != proof the side-effect owner enforced fencing atomically
+commit receipt != proof the external system of record is truthful
 ```
 
 ## Integration pattern
@@ -291,7 +356,13 @@ An agent evaluator can store the JSON report next to the trace as an auditable c
 
 New profiles should reuse canonical invariants rather than fork their semantics.
 
-That is why v0.4 imports and reuses the v0.3 ownership validator before applying lease/fencing checks.
+That is why:
+
+```text
+v0.3 reuses v0.2
+v0.4 reuses v0.3
+v0.5 reuses v0.4
+```
 
 A narrow profile may prove one seam without claiming that every upstream or downstream property was independently verified.
 
@@ -309,4 +380,4 @@ external traces
 portable PASS / FAIL evidence
 ```
 
-The profile ladder now reaches a genuinely distributed failure mode: a stale executor may still be alive, but it must not be admissible once a newer fencing epoch exists.
+The profile ladder now reaches the lost-acknowledgement failure mode: a correct worker may have committed an effect even when the local client never received a successful response.
