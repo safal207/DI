@@ -3,7 +3,7 @@
 [![Validate DI fixtures](https://github.com/safal207/DI/actions/workflows/validate-fixtures.yml/badge.svg)](https://github.com/safal207/DI/actions/workflows/validate-fixtures.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-**Current checkpoint:** v0.5 stabilization candidate. The implementation is merged and validated; a Git tag or GitHub Release has not yet been created.
+**Current checkpoint:** v0.5 is stabilized on `main`; both the full conformance workflow and the pinned credential-boundary workflow passed. A Git tag or GitHub Release has not yet been created.
 
 DI maps what can and cannot be done before a decision becomes a commitment.
 
@@ -247,7 +247,8 @@ unverified runtime assumption
 - v0.3 multi-agent ownership: complete.
 - v0.4 lease and split-brain fencing: complete.
 - v0.5 ambiguous commit recovery: implemented and validated.
-- stabilization and public release marker: in progress.
+- v0.5 stabilization: complete.
+- public Git tag / GitHub Release: pending.
 
 DI remains intentionally provider-neutral, inspectable, and fail-closed on broken identity chains.
 
