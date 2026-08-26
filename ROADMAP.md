@@ -108,27 +108,25 @@ one committed logical operation -> one committed effect identity
 
 ## v0.5 Stabilization
 
-Status: **active**.
+Status: **complete**.
 
-Goals:
+Delivered:
 
-- align README, roadmap, release notes, manifest, and conformance documentation;
-- run the full profile ladder from one green `main` workflow;
-- add a read-only credential-boundary workflow pinned to an immutable provider revision;
-- resolve stale PRs without discarding useful contributor work;
-- keep one canonical profile ladder;
-- prepare a `v0.5-draft` release marker only from an exact green `main` commit.
+- README, roadmap, release notes, and conformance documentation aligned with the actual v0.2–v0.5 profile ladder;
+- full profile ladder executed successfully on the stabilization `main` commit;
+- read-only credential-boundary workflow pinned to an immutable ContractGraph-QA revision and executed successfully on `main`;
+- useful contributor content from PR #9 preserved at the correct path with attribution;
+- obsolete PR branches replaced by current-main validation rather than merged with stale history;
+- explicit release scope and runtime limitations documented.
 
-Release gate:
+Release gate status:
 
 ```text
-stabilization merged
-AND
-Validate DI fixtures = success on merge commit
-AND
-FCRP Credential Boundary = success on merge commit
-AND
-no known release-blocking regression
+stabilization merged                         PASS
+Validate DI fixtures on stabilization main  PASS
+FCRP Credential Boundary on same main       PASS
+known release-blocking regression            NONE OBSERVED
+Git tag / GitHub Release                     PENDING
 ```
 
 ## Adoption and External Validation

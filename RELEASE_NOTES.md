@@ -1,20 +1,54 @@
 # DI v0.5 Stabilization Notes
 
-Status: **release candidate**
+Status: **stabilized — public marker pending**
 
-No Git tag or GitHub Release has been created yet. A public marker should be created only after the stabilization changes merge into `main` and the full workflow succeeds on that exact merge commit.
+DI v0.5 is implemented, merged, documented, and validated on `main`. No Git tag or GitHub Release has been created yet, so this file does not claim that a public release marker exists.
 
-## Baseline evidence
+## Validated commits and workflow evidence
 
-The v0.5 implementation was merged into `main` as:
+### v0.5 implementation
+
+The ambiguous-commit recovery layer was merged into `main` as:
 
 ```text
 6a544c91fdb139ba377f239181b965c631733c0d
 ```
 
-The `Validate DI fixtures` workflow completed successfully for that commit in run `32935534981`.
+The full `Validate DI fixtures` workflow completed successfully for that commit:
 
-This stabilization pass adds documentation alignment, a corrected contributor example, and a pinned credential-boundary workflow. Those changes require a new green `main` workflow before any release marker is justified.
+```text
+run 32935534981 — success
+```
+
+### v0.5 stabilization
+
+The documentation, contributor-example, and credential-boundary stabilization pass was merged into `main` as:
+
+```text
+5b821e7b9f87bf553140859a7c2729c83d6d8cd7
+```
+
+Both required workflows completed successfully on that exact merge commit:
+
+```text
+Validate DI fixtures
+run 32943621652 — success
+
+FCRP Credential Boundary
+run 32943622429 — success
+```
+
+The credential-boundary caller is pinned to immutable ContractGraph-QA commit:
+
+```text
+cc1d1e227bbb1a25776819e6f2829bfb7a66ee58
+```
+
+and grants only:
+
+```text
+contents: read
+```
 
 ## Profile ladder
 
@@ -38,7 +72,7 @@ retry != new effect identity
 one committed logical operation -> one committed effect identity
 ```
 
-The release candidate includes:
+The stabilized checkpoint includes:
 
 - stable `logical_operation_id` and `effect_key` records;
 - ordered commit-outcome observations;
@@ -46,7 +80,10 @@ The release candidate includes:
 - safe next-action rules for `committed`, `not_committed`, and `still_unknown`;
 - state-effect evidence before success closure;
 - `ambiguous-commit-v0.5` CLI conformance profile;
-- mutation-based negative checks for effect-key drift, contradictory resolution, duplicate committed effects, unsafe retries, and unsupported success claims.
+- mutation-based negative checks for effect-key drift, contradictory resolution, duplicate committed effects, unsafe retries, and unsupported success claims;
+- aligned README and roadmap documentation;
+- a corrected and attributed contributor example from PR #9;
+- a pinned read-only credential-boundary workflow revalidated from current `main`.
 
 ## Validation commands
 
@@ -85,20 +122,20 @@ A DI conformance PASS validates the supplied evidence chain. It does **not** ind
 - network evidence was complete;
 - the represented human intent was ethically obtained outside the supplied record.
 
-DI remains a protocol and conformance repository, not an execution engine, transaction coordinator, lock service, or provider runtime.
+DI remains a protocol and conformance repository, not an execution engine, transaction coordinator, lock service, idempotency store, or provider runtime.
 
-## Release gate
-
-A `v0.5-draft` marker is justified only when all of the following are true:
+## Release gate status
 
 ```text
-stabilization PR merged
-AND
-full main workflow success
-AND
-credential-boundary workflow success
-AND
-README / ROADMAP / conformance docs agree
-AND
-no known release-blocking regression remains
+v0.5 implementation merged                 PASS
+stabilization merged                       PASS
+full validation on stabilization main      PASS
+credential-boundary scan on same main      PASS
+documentation aligned                      PASS
+known release-blocking regression          NONE OBSERVED
+Git tag / GitHub Release                    PENDING
 ```
+
+A `v0.5-draft` public marker may now be created from a later exact `main` commit only after the final bookkeeping changes also pass both workflows. Until that marker exists, the accurate status remains:
+
+> stabilized checkpoint, public release marker pending.
