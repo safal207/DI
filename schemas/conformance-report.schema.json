@@ -19,7 +19,8 @@
       "enum": [
         "end-to-end-integrity-v0.2",
         "multi-agent-dispatch-v0.3",
-        "lease-split-brain-v0.4"
+        "lease-split-brain-v0.4",
+        "ambiguous-commit-v0.5"
       ]
     },
     "input_file": {"type": "string", "minLength": 1},
