@@ -46,6 +46,9 @@ jobs:
       - name: Validate lease expiry and split-brain fencing
         run: python scripts/validate-lease-split-brain.py
 
+      - name: Validate ambiguous commit recovery
+        run: python scripts/validate-ambiguous-commit.py
+
       - name: Smoke-test DI conformance CLI v0.2
         run: |
           python scripts/di-conformance.py fixtures/valid-end-to-end-integrity-v0.2.json --pretty > conformance-report-v0.2.json
@@ -60,3 +63,8 @@ jobs:
         run: |
           python scripts/di-conformance.py fixtures/valid-lease-split-brain-recovery-v0.4.json --profile lease-split-brain-v0.4 --pretty > conformance-report-v0.4.json
           cat conformance-report-v0.4.json
+
+      - name: Smoke-test DI conformance CLI v0.5
+        run: |
+          python scripts/di-conformance.py fixtures/valid-ambiguous-commit-recovery-v0.5.json --profile ambiguous-commit-v0.5 --pretty > conformance-report-v0.5.json
+          cat conformance-report-v0.5.json
