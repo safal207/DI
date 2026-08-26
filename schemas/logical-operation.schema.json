@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/safal207/DI/schemas/logical-operation.schema.json",
+  "title": "Logical Operation Identity v0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "operation_version",
+    "logical_operation_id",
+    "effect_key",
+    "intended_effect",
+    "identity_contract",
+    "evidence_references"
+  ],
+  "properties": {
+    "operation_version": {"type": "string", "enum": ["0.1"]},
+    "logical_operation_id": {"type": "string", "minLength": 1},
+    "effect_key": {"type": "string", "minLength": 1},
+    "intended_effect": {"type": "string", "minLength": 1},
+    "identity_contract": {
+      "type": "string",
+      "enum": ["same_key_same_effect", "authoritative_lookup_only"]
+    },
+    "evidence_references": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1}
+    }
+  }
+}
