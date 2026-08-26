@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/safal207/DI/schemas/commit-outcome-receipt.schema.json",
+  "title": "Commit Outcome Receipt v0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "receipt_version",
+    "receipt_id",
+    "logical_operation_id",
+    "effect_key",
+    "observation_method",
+    "commit_status",
+    "authoritative",
+    "observed_at",
+    "evidence_references"
+  ],
+  "properties": {
+    "receipt_version": {"type": "string", "enum": ["0.1"]},
+    "receipt_id": {"type": "string", "minLength": 1},
+    "logical_operation_id": {"type": "string", "minLength": 1},
+    "effect_key": {"type": "string", "minLength": 1},
+    "dispatch_attempt_id": {"type": "string", "minLength": 1},
+    "observation_method": {
+      "type": "string",
+      "enum": [
+        "mutation_response",
+        "same_key_replay",
+        "authoritative_lookup",
+        "provider_event",
+        "operator_confirmation"
+      ]
+    },
+    "commit_status": {
+      "type": "string",
+      "enum": ["committed", "not_committed", "unknown"]
+    },
+    "authoritative": {"type": "boolean"},
+    "committed_effect_id": {"type": "string", "minLength": 1},
+    "observed_at": {"type": "string", "minLength": 1},
+    "evidence_references": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1}
+    }
+  }
+}
