@@ -1,0 +1,218 @@
+{
+  "authority_consumption_receipt": {
+    "authority_generation": 12,
+    "authority_id": "authority.sandbox-payment-recovery",
+    "authority_receipt_id": "authority-receipt.sandbox-payment-recovery.lease.001",
+    "bound_execution_mode": "SAFE_RETRY",
+    "consumed_at": "2026-08-28T11:59:56.000+00:00",
+    "consumption_receipt_id": "consumption.sandbox-payment-recovery.lease.001",
+    "consumption_status": "consumed",
+    "consumption_version": "0.1",
+    "dispatch_id": "dispatch.sandbox-payment-recovery.lease.001",
+    "evidence_references": [
+      "evidence://authority/consume/sandbox-payment-recovery-lease-001"
+    ],
+    "recovery_cycle_id": "cycle.sandbox-payment-recovery.lease.001",
+    "recovery_decision_id": "recovery.payment.safe-retry.lease.001",
+    "use_token": "use-token.sandbox-payment-recovery.lease.001"
+  },
+  "commit_outcome_receipts": [
+    {
+      "authoritative": false,
+      "commit_status": "unknown",
+      "dispatch_attempt_id": "attempt.sandbox-payment-recovery.B.current.002",
+      "effect_key": "effect-key.sandbox-payment.001",
+      "evidence_references": [
+        "evidence://di-sandbox/ambiguous-payment/001/event/2/acknowledgement-lost"
+      ],
+      "logical_operation_id": "operation.sandbox-payment.001",
+      "observation_method": "mutation_response",
+      "observed_at": "2026-08-28T12:00:00.200+00:00",
+      "receipt_id": "commit-outcome.sandbox-payment-recovery.unknown.001",
+      "receipt_version": "0.1"
+    },
+    {
+      "authoritative": true,
+      "commit_status": "committed",
+      "committed_effect_id": "sandbox-effect.payment.001",
+      "effect_key": "effect-key.sandbox-payment.001",
+      "evidence_references": [
+        "evidence://di-sandbox/ambiguous-payment/001/event/3/authoritative-lookup"
+      ],
+      "logical_operation_id": "operation.sandbox-payment.001",
+      "observation_method": "authoritative_lookup",
+      "observed_at": "2026-08-28T12:00:00.300+00:00",
+      "receipt_id": "commit-outcome.sandbox-payment-recovery.lookup.002",
+      "receipt_version": "0.1"
+    }
+  ],
+  "commit_resolution": {
+    "effect_key": "effect-key.sandbox-payment.001",
+    "evidence_references": [
+      "evidence://di-sandbox/ambiguous-payment/001/event/3/authoritative-lookup",
+      "evidence://di-sandbox/ambiguous-payment/001/decision/no-second-mutation-authorized"
+    ],
+    "logical_operation_id": "operation.sandbox-payment.001",
+    "resolution_id": "commit-resolution.sandbox-payment-recovery.001",
+    "resolution_status": "committed",
+    "resolution_version": "0.1",
+    "resolved_at": "2026-08-28T12:00:00.400+00:00",
+    "resolved_effect_id": "sandbox-effect.payment.001",
+    "selected_next_action": "ACCEPT_EXISTING_EFFECT"
+  },
+  "dispatch_attempt_receipts": [
+    {
+      "actor_id": "worker.A",
+      "attempt_id": "attempt.sandbox-payment-recovery.A.stale.001",
+      "attempt_version": "0.1",
+      "attempted_at": "2026-08-28T11:59:59.300+00:00",
+      "dispatch_id": "dispatch.sandbox-payment-recovery.lease.001",
+      "evidence_references": [
+        "evidence://side-effect-owner/reject/token-101/current-102"
+      ],
+      "fencing_token": 101,
+      "lease_id": "lease.sandbox-payment-recovery.A.001",
+      "outcome": "rejected",
+      "ownership_event_id": "ownership.sandbox-payment-recovery.lease.001",
+      "ownership_generation": 1,
+      "reason": "stale_fencing_token"
+    },
+    {
+      "actor_id": "worker.B",
+      "attempt_id": "attempt.sandbox-payment-recovery.B.current.002",
+      "attempt_version": "0.1",
+      "attempted_at": "2026-08-28T11:59:59.400+00:00",
+      "dispatch_id": "dispatch.sandbox-payment-recovery.lease.001",
+      "evidence_references": [
+        "evidence://side-effect-owner/accept/token-102"
+      ],
+      "fencing_token": 102,
+      "lease_id": "lease.sandbox-payment-recovery.B.002",
+      "outcome": "accepted",
+      "ownership_event_id": "ownership.sandbox-payment-recovery.lease.002",
+      "ownership_generation": 2,
+      "reason": "accepted_current_lease"
+    }
+  ],
+  "dispatch_leases": [
+    {
+      "actor_id": "worker.A",
+      "dispatch_id": "dispatch.sandbox-payment-recovery.lease.001",
+      "evidence_references": [
+        "evidence://lease-service/lease-A/token-101"
+      ],
+      "expires_at": "2026-08-28T11:59:59.000+00:00",
+      "fencing_token": 101,
+      "issued_at": "2026-08-28T11:59:56.200+00:00",
+      "lease_id": "lease.sandbox-payment-recovery.A.001",
+      "lease_version": "0.1",
+      "ownership_event_id": "ownership.sandbox-payment-recovery.lease.001",
+      "ownership_generation": 1
+    },
+    {
+      "actor_id": "worker.B",
+      "dispatch_id": "dispatch.sandbox-payment-recovery.lease.001",
+      "evidence_references": [
+        "evidence://lease-service/lease-B/token-102"
+      ],
+      "expires_at": "2026-08-28T12:00:10.000+00:00",
+      "fencing_token": 102,
+      "issued_at": "2026-08-28T11:59:59.200+00:00",
+      "lease_id": "lease.sandbox-payment-recovery.B.002",
+      "lease_version": "0.1",
+      "ownership_event_id": "ownership.sandbox-payment-recovery.lease.002",
+      "ownership_generation": 2
+    }
+  ],
+  "dispatch_ownership_events": [
+    {
+      "actor_id": "worker.A",
+      "dispatch_id": "dispatch.sandbox-payment-recovery.lease.001",
+      "event_type": "claim",
+      "evidence_references": [
+        "evidence://orchestrator/claim/worker-A"
+      ],
+      "occurred_at": "2026-08-28T11:59:56.100+00:00",
+      "ownership_event_id": "ownership.sandbox-payment-recovery.lease.001",
+      "ownership_event_version": "0.1",
+      "ownership_generation": 1
+    },
+    {
+      "actor_id": "worker.B",
+      "dispatch_id": "dispatch.sandbox-payment-recovery.lease.001",
+      "event_type": "transfer",
+      "evidence_references": [
+        "evidence://lease-service/expiry-confirmed/worker-A",
+        "evidence://orchestrator/takeover/worker-B"
+      ],
+      "occurred_at": "2026-08-28T11:59:59.100+00:00",
+      "ownership_event_id": "ownership.sandbox-payment-recovery.lease.002",
+      "ownership_event_version": "0.1",
+      "ownership_generation": 2,
+      "previous_ownership_event_id": "ownership.sandbox-payment-recovery.lease.001",
+      "transfer_basis": "lease_expiry"
+    }
+  ],
+  "execution_mode": "SAFE_RETRY",
+  "execution_receipt": {
+    "actor_id": "worker.B",
+    "authority_consumption_receipt_id": "consumption.sandbox-payment-recovery.lease.001",
+    "authority_generation_at_execution": 12,
+    "authority_receipt_id": "authority-receipt.sandbox-payment-recovery.lease.001",
+    "authority_status_at_execution": "active",
+    "declared_execution_mode": "SAFE_RETRY",
+    "dispatch_attempt_id": "attempt.sandbox-payment-recovery.B.current.002",
+    "dispatch_fencing_token": 102,
+    "dispatch_id": "dispatch.sandbox-payment-recovery.lease.001",
+    "dispatch_lease_id": "lease.sandbox-payment-recovery.B.002",
+    "dispatch_ownership_event_id": "ownership.sandbox-payment-recovery.lease.002",
+    "dispatch_ownership_generation": 2,
+    "evidence_references": [
+      "evidence://dispatch/sandbox-payment-recovery-lease-001",
+      "evidence://worker-B/execution-observed/token-102"
+    ],
+    "executed_at": "2026-08-28T11:59:59.500+00:00",
+    "execution_status": "observed",
+    "observed_execution_mode": "SAFE_RETRY",
+    "receipt_id": "execution.sandbox-payment-recovery.lease.001",
+    "receipt_version": "0.1",
+    "recovery_cycle_id": "cycle.sandbox-payment-recovery.lease.001",
+    "recovery_decision_id": "recovery.payment.safe-retry.lease.001",
+    "source_cycle_id": "cycle.payment-attempt.failed.000",
+    "use_token": "use-token.sandbox-payment-recovery.lease.001"
+  },
+  "logical_operation": {
+    "effect_key": "effect-key.sandbox-payment.001",
+    "evidence_references": [
+      "evidence://di-sandbox/ambiguous-payment/001/logical-operation/operation.sandbox-payment.001",
+      "evidence://di-sandbox/ambiguous-payment/001/identity-contract/same-key-same-effect"
+    ],
+    "identity_contract": "same_key_same_effect",
+    "intended_effect": "Commit exactly one provider-neutral sandbox payment effect.",
+    "logical_operation_id": "operation.sandbox-payment.001",
+    "operation_version": "0.1"
+  },
+  "profile_version": "0.5",
+  "recovery_decision": {
+    "authority_generation": 12,
+    "authority_id": "authority.sandbox-payment-recovery",
+    "decision_id": "recovery.payment.safe-retry.lease.001",
+    "selected_action": "SAFE_RETRY"
+  },
+  "state_effect_receipt": {
+    "effect_id": "state-effect.sandbox-payment-recovery.001",
+    "effect_status": "observed",
+    "effect_version": "0.1",
+    "evidence_references": [
+      "evidence://di-sandbox/ambiguous-payment/001/event/1/mutation-committed",
+      "evidence://di-sandbox/ambiguous-payment/001/effect/sandbox-effect.payment.001"
+    ],
+    "execution_receipt_id": "execution.sandbox-payment-recovery.lease.001",
+    "expected_target_state": "PAYMENT_COMMITTED",
+    "observed_at": "2026-08-28T12:00:00.500+00:00",
+    "observed_state": "PAYMENT_COMMITTED",
+    "recovery_cycle_id": "cycle.sandbox-payment-recovery.lease.001",
+    "state_generation": 1
+  },
+  "trace_id": "sandbox.ambiguous-payment-recovery.001"
+}
