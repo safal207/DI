@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.py[cod]
+
+# Local environments and secrets
+.env
+.env.*
+!.env.example
+*.secret
+*.key
+
+# Local/generated evidence
+/generated/
+/evidence/stripe-testmode-local/
+/stripe-testmode-capture*.json
+
+# Editor / OS
+.DS_Store
+.vscode/
+.idea/
