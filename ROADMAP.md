@@ -84,7 +84,7 @@ Delivered:
 
 ## v0.5 — Ambiguous Commit Recovery
 
-Status: **complete and validated**.
+Status: **complete, validated, and published as `v0.5-draft`**.
 
 Delivered:
 
@@ -106,32 +106,66 @@ retry != new effect identity
 one committed logical operation -> one committed effect identity
 ```
 
-## v0.5 Stabilization
+## v0.5 Stabilization and Publication
 
 Status: **complete**.
 
 Delivered:
 
 - README, roadmap, release notes, and conformance documentation aligned with the actual v0.2–v0.5 profile ladder;
-- full profile ladder executed successfully on the stabilization `main` commit;
-- read-only credential-boundary workflow pinned to an immutable ContractGraph-QA revision and executed successfully on `main`;
+- full profile ladder executed successfully on stabilized `main`;
+- read-only credential-boundary workflow pinned to an immutable ContractGraph-QA revision and executed successfully;
 - useful contributor content from PR #9 preserved at the correct path with attribution;
 - obsolete PR branches replaced by current-main validation rather than merged with stale history;
-- explicit release scope and runtime limitations documented.
+- explicit release scope and runtime limitations documented;
+- real Git tag and GitHub prerelease `v0.5-draft` published from exact validated commit `a35a990c0c3d7715551b1cdaf933a58411f26c2b`.
 
 Release gate status:
 
 ```text
 stabilization merged                         PASS
-Validate DI fixtures on stabilization main  PASS
-FCRP Credential Boundary on same main       PASS
-known release-blocking regression            NONE OBSERVED
-Git tag / GitHub Release                     PENDING
+Validate DI fixtures                         PASS
+FCRP Credential Boundary                     PASS
+known release-blocking regression             NONE OBSERVED
+Git tag v0.5-draft                            PUBLISHED
+GitHub prerelease DI v0.5-draft               PUBLISHED
 ```
+
+## v0.5 Architecture Freeze
+
+Status: **active**.
+
+Purpose:
+
+```text
+published internal model
+→ external sandbox evidence
+→ mutation pressure
+→ architecture change only if evidence exposes a real gap
+```
+
+Allowed during the freeze:
+
+- bug fixes and security fixes;
+- fixtures and mutation tests for existing profiles;
+- external trace adapters without provider secrets;
+- provider-neutral sandbox tooling;
+- stable error codes and easier conformance consumption;
+- benchmark packs based on existing invariants;
+- documentation corrections and realistic examples.
+
+Blocked without the v0.6 admission gate:
+
+- a new conformance profile version;
+- a new normative architecture layer;
+- weakening existing invariants to make an external trace pass;
+- broadening DI into an execution engine, transaction coordinator, lock service, idempotency store, or policy engine.
+
+The full admission gate is defined in [`docs/architecture-freeze-v0.5.md`](docs/architecture-freeze-v0.5.md).
 
 ## Adoption and External Validation
 
-Status: **exploratory**.
+Status: **active evidence phase**.
 
 Priority use cases:
 
@@ -142,33 +176,56 @@ Priority use cases:
 - incident response and rollback;
 - human approval at authority boundaries.
 
-Next evidence target:
+Current evidence target:
 
-- collect one provider sandbox or test-mode trace;
-- translate only observable facts into a DI conformance fixture;
-- preserve the distinction between provider guarantees, our inference, observed evidence, and runtime assumptions;
-- avoid claiming provider endorsement or conformance.
+- build a deterministic provider-neutral ambiguous-payment sandbox;
+- capture a reproducible request → lost acknowledgement → authoritative lookup trace;
+- translate observable facts into the existing v0.5 shape;
+- run both the valid trace and adversarial mutations through conformance;
+- provide an optional live Stripe test-mode capture adapter that requires a user-supplied secret only at runtime and never commits it;
+- publish a case study that separates documented provider guarantees, observations, DI interpretation, and remaining runtime assumptions.
 
 External products are validation cases, not members of the DI/DIF/DRP/TIP stack.
 
-## After the v0.5 checkpoint
+## v0.6 Admission Gate
 
-Do not add another architecture layer automatically.
+v0.6 is not planned by default.
 
-Candidate work should first answer one of these questions:
+A proposal is admitted only with:
 
-1. Does a real external trace reveal an unmodelled integrity seam?
-2. Is a current invariant too weak or too hard to apply?
-3. Can the conformance interface become easier to consume without becoming an execution platform?
-4. Does the protocol need RFC clarification rather than another schema?
+1. an external reproducible trace;
+2. a minimal counterexample to v0.2–v0.5;
+3. evidence that the current model either allows an unsafe trace or cannot represent a needed integrity property;
+4. a mutation test for the proposed invariant;
+5. a precise claim boundary;
+6. a project-boundary review showing the change belongs in DI.
 
-Possible next directions:
+Until all six exist, the architectural decision is:
 
-- packaged conformance artifacts for CI systems;
-- clearer stable error codes;
-- external trace adapters that do not import provider secrets;
-- a compact benchmark across several recovery failure modes;
-- RFC-0002 only after evidence justifies terminology or semantic changes.
+```text
+NO v0.6
+→ improve evidence, adapters, usability, and market validation instead
+```
+
+## Product and Market Validation
+
+The same evidence pack should support three entry paths:
+
+- **employment proof-of-work** for payments, backend, Web3, and agent QA roles;
+- **paid verification pilot** for timeout, retry, takeover, and duplicate-effect risks;
+- **conformance toolkit** for teams that can emit trace JSON and need a portable PASS/FAIL report.
+
+The first commercial offer should remain bounded:
+
+```text
+one selected mutation flow
+→ one failure surface
+→ one trace pack
+→ conformance report
+→ remediation boundary
+```
+
+No broad platform promise before paid pilot evidence.
 
 ## Boundaries
 

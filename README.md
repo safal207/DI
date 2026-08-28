@@ -2,8 +2,9 @@
 
 [![Validate DI fixtures](https://github.com/safal207/DI/actions/workflows/validate-fixtures.yml/badge.svg)](https://github.com/safal207/DI/actions/workflows/validate-fixtures.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Release: v0.5-draft](https://img.shields.io/badge/release-v0.5--draft-blue.svg)](https://github.com/safal207/DI/releases/tag/v0.5-draft)
 
-**Current checkpoint:** v0.5 is stabilized on `main`; both the full conformance workflow and the pinned credential-boundary workflow passed. A Git tag or GitHub Release has not yet been created.
+**Current checkpoint:** [`v0.5-draft`](https://github.com/safal207/DI/releases/tag/v0.5-draft) is published from exact validated commit `a35a990c0c3d7715551b1cdaf933a58411f26c2b`. The v0.5 architecture is now frozen while external evidence is collected.
 
 DI maps what can and cannot be done before a decision becomes a commitment.
 
@@ -65,7 +66,7 @@ The cross-repository architecture is documented in [`docs/decision-transition-in
 
 ## Current validated architecture
 
-The repository now contains provider-neutral conformance profiles for a wider evidence chain around DI:
+The repository contains provider-neutral conformance profiles for a wider evidence chain around DI:
 
 ```text
 Intent
@@ -108,6 +109,16 @@ one committed logical operation -> one committed effect identity
 ```
 
 See [`docs/decision-transition-integrity-stack-v0.5.md`](docs/decision-transition-integrity-stack-v0.5.md) and [`docs/ambiguous-commit-integrity-v0.5.md`](docs/ambiguous-commit-integrity-v0.5.md).
+
+## Architecture freeze
+
+The v0.5 profile ladder is frozen while external sandbox and test-mode evidence is collected.
+
+Allowed work includes fixtures, mutation tests, adapters, benchmarks, security fixes, stable error codes, and provider-neutral sandbox tooling.
+
+A new v0.6 architecture layer requires an external counterexample, a current-profile result, a mutation test, and an explicit claim boundary.
+
+See [`docs/architecture-freeze-v0.5.md`](docs/architecture-freeze-v0.5.md).
 
 ## Quick start
 
@@ -182,11 +193,14 @@ Those remain runtime, evidence, and provider boundaries.
 - [`docs/concept.md`](docs/concept.md) — DI concept and boundaries.
 - [`docs/relation-to-dif-and-drp.md`](docs/relation-to-dif-and-drp.md) — DI's place between intent and commitment.
 - [`docs/decision-transition-integrity-stack.md`](docs/decision-transition-integrity-stack.md) — cross-stack architecture.
+- [`docs/decision-transition-integrity-stack-v0.5.md`](docs/decision-transition-integrity-stack-v0.5.md) — current profile ladder.
+- [`docs/architecture-freeze-v0.5.md`](docs/architecture-freeze-v0.5.md) — evidence-first freeze and v0.6 admission gate.
 - [`docs/conformance-test-kit.md`](docs/conformance-test-kit.md) — CLI profiles and report contract.
 - [`docs/lease-split-brain-integrity-v0.4.md`](docs/lease-split-brain-integrity-v0.4.md) — lease and fencing semantics.
 - [`docs/ambiguous-commit-integrity-v0.5.md`](docs/ambiguous-commit-integrity-v0.5.md) — lost-acknowledgement recovery.
 - [`docs/case-study-stripe-payment-recovery.md`](docs/case-study-stripe-payment-recovery.md) — public-documentation mapping, not a live Stripe integration.
-- [`RELEASE_NOTES.md`](RELEASE_NOTES.md) — v0.5 stabilization scope and release gate.
+- [`releases/v0.5-draft.md`](releases/v0.5-draft.md) — published prerelease scope and limitations.
+- [`RELEASE_NOTES.md`](RELEASE_NOTES.md) — v0.5 stabilization record.
 - [`ROADMAP.md`](ROADMAP.md) — current maturity and next priorities.
 
 ## Machine-readable artifacts
@@ -219,7 +233,7 @@ Examples describe feasibility boundaries. They do not grant real-world authority
 
 ## Credential boundary
 
-The repository also runs a read-only credential-boundary scan through a reusable ContractGraph-QA workflow pinned to an immutable commit. The caller grants only:
+The repository runs a read-only credential-boundary scan through a reusable ContractGraph-QA workflow pinned to an immutable commit. The caller grants only:
 
 ```text
 contents: read
@@ -248,7 +262,8 @@ unverified runtime assumption
 - v0.4 lease and split-brain fencing: complete.
 - v0.5 ambiguous commit recovery: implemented and validated.
 - v0.5 stabilization: complete.
-- public Git tag / GitHub Release: pending.
+- public `v0.5-draft` Git tag / GitHub prerelease: published.
+- v0.5 architecture freeze: active.
 
 DI remains intentionally provider-neutral, inspectable, and fail-closed on broken identity chains.
 
