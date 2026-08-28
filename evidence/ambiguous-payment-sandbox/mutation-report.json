@@ -1,0 +1,90 @@
+{
+  "baseline": {
+    "actual": "PASS",
+    "errors": [],
+    "expected": "PASS"
+  },
+  "cases": [
+    {
+      "all_errors": [
+        "$.commit_outcome_receipts[1].effect_key: must match the canonical effect key"
+      ],
+      "expected_error_fragment": "must match the canonical effect key",
+      "matching_errors": [
+        "$.commit_outcome_receipts[1].effect_key: must match the canonical effect key"
+      ],
+      "mutation": "effect-key-drift",
+      "rejected_as_expected": true,
+      "validator_status": "FAIL"
+    },
+    {
+      "all_errors": [
+        "$.commit_outcome_receipts[2].observed_at: commit observations must be time-ordered",
+        "$.commit_outcome_receipts[2].observed_at: commit observation cannot precede execution",
+        "$.commit_outcome_receipts: one logical operation resolved to multiple committed effect identities",
+        "$.commit_resolution.resolved_effect_id: committed resolution requires exactly one committed effect identity"
+      ],
+      "expected_error_fragment": "multiple committed effect identities",
+      "matching_errors": [
+        "$.commit_outcome_receipts: one logical operation resolved to multiple committed effect identities"
+      ],
+      "mutation": "multiple-committed-effects",
+      "rejected_as_expected": true,
+      "validator_status": "FAIL"
+    },
+    {
+      "all_errors": [
+        "$.commit_resolution.resolution_status: without authoritative commit evidence the result must remain still_unknown"
+      ],
+      "expected_error_fragment": "without authoritative commit evidence",
+      "matching_errors": [
+        "$.commit_resolution.resolution_status: without authoritative commit evidence the result must remain still_unknown"
+      ],
+      "mutation": "unknown-claimed-not-committed",
+      "rejected_as_expected": true,
+      "validator_status": "FAIL"
+    },
+    {
+      "all_errors": [
+        "$.commit_resolution.selected_next_action: committed effect may not authorize another mutation",
+        "$.commit_resolution.next_effect_key: committed effect must not mint another mutation key"
+      ],
+      "expected_error_fragment": "committed effect may not authorize another mutation",
+      "matching_errors": [
+        "$.commit_resolution.selected_next_action: committed effect may not authorize another mutation"
+      ],
+      "mutation": "retry-after-commit",
+      "rejected_as_expected": true,
+      "validator_status": "FAIL"
+    },
+    {
+      "all_errors": [
+        "$.commit_resolution.next_effect_key: retry must preserve the original effect key"
+      ],
+      "expected_error_fragment": "retry must preserve the original effect key",
+      "matching_errors": [
+        "$.commit_resolution.next_effect_key: retry must preserve the original effect key"
+      ],
+      "mutation": "retry-with-new-key",
+      "rejected_as_expected": true,
+      "validator_status": "FAIL"
+    },
+    {
+      "all_errors": [
+        "$.state_effect_receipt.observed_state: committed resolution must match the expected target state"
+      ],
+      "expected_error_fragment": "must match the expected target state",
+      "matching_errors": [
+        "$.state_effect_receipt.observed_state: committed resolution must match the expected target state"
+      ],
+      "mutation": "success-without-state-effect",
+      "rejected_as_expected": true,
+      "validator_status": "FAIL"
+    }
+  ],
+  "mutation_count": 6,
+  "mutations_rejected_as_expected": 6,
+  "report_version": "0.1",
+  "status": "PASS",
+  "suite": "ambiguous-payment-sandbox-mutation-test"
+}
