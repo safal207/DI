@@ -1,0 +1,8 @@
+{
+  "error_count": 0,
+  "errors": [],
+  "input_file": "evidence/ambiguous-payment-sandbox/trace.json",
+  "profile": "ambiguous-commit-v0.5",
+  "report_version": "0.1",
+  "status": "PASS"
+}
