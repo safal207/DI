@@ -1,0 +1,14 @@
+{
+  "acknowledgement_lost": true,
+  "authoritative_commit_status": "committed",
+  "committed_effect_id": "sandbox-effect.payment.001",
+  "conformance_status": "PASS",
+  "duplicate_effect_count": 0,
+  "effect_key_sha256": "016258d441c6909e7f9c0a8c8966b37f759727160422b55e6bc93c82cedab4c7",
+  "external_provider_used": false,
+  "logical_operation_id": "operation.sandbox-payment.001",
+  "sandbox_version": "0.1",
+  "scenario": "commit_then_lose_ack_then_authoritative_lookup",
+  "selected_next_action": "ACCEPT_EXISTING_EFFECT",
+  "stored_effect_count": 1
+}
