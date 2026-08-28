@@ -68,3 +68,32 @@ jobs:
         run: |
           python scripts/di-conformance.py fixtures/valid-ambiguous-commit-recovery-v0.5.json --profile ambiguous-commit-v0.5 --pretty > conformance-report-v0.5.json
           cat conformance-report-v0.5.json
+
+      - name: Run deterministic ambiguous-payment sandbox
+        run: |
+          rm -rf generated/ambiguous-payment-sandbox
+          python tools/ambiguous_payment_sandbox.py \
+            --output-dir generated/ambiguous-payment-sandbox
+          python tools/test_ambiguous_payment_sandbox.py \
+            --output generated/ambiguous-payment-sandbox/mutation-report.json
+          python scripts/di-conformance.py \
+            generated/ambiguous-payment-sandbox/trace.json \
+            --profile ambiguous-commit-v0.5 \
+            --pretty \
+            > generated/ambiguous-payment-sandbox/cli-conformance-report.json
+          cat generated/ambiguous-payment-sandbox/summary.json
+          cat generated/ambiguous-payment-sandbox/mutation-report.json
+
+      - name: Compile optional Stripe test-mode adapters
+        run: |
+          python -m py_compile \
+            tools/capture_stripe_testmode.py \
+            tools/stripe_capture_to_di_trace.py
+
+      - name: Upload deterministic sandbox evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: ambiguous-payment-sandbox-evidence
+          path: generated/ambiguous-payment-sandbox/
+          if-no-files-found: error
+          retention-days: 30
