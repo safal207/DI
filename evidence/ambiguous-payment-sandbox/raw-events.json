@@ -1,0 +1,47 @@
+{
+  "event_log_version": "0.1",
+  "events": [
+    {
+      "amount_minor": 2500,
+      "currency": "EUR",
+      "effect_id": "sandbox-effect.payment.001",
+      "effect_key": "effect-key.sandbox-payment.001",
+      "event_index": 1,
+      "event_type": "mutation_committed",
+      "logical_operation_id": "operation.sandbox-payment.001",
+      "observed_at": "2026-08-28T12:00:00.100+00:00",
+      "state": "PAYMENT_COMMITTED"
+    },
+    {
+      "effect_key": "effect-key.sandbox-payment.001",
+      "event_index": 2,
+      "event_type": "acknowledgement_lost",
+      "local_commit_state": "unknown",
+      "logical_operation_id": "operation.sandbox-payment.001",
+      "observed_at": "2026-08-28T12:00:00.200+00:00"
+    },
+    {
+      "commit_status": "committed",
+      "effect_id": "sandbox-effect.payment.001",
+      "effect_key": "effect-key.sandbox-payment.001",
+      "event_index": 3,
+      "event_type": "authoritative_lookup",
+      "observed_at": "2026-08-28T12:00:00.300+00:00",
+      "state": "PAYMENT_COMMITTED"
+    }
+  ],
+  "provider": "deterministic-in-memory-sandbox",
+  "provider_state": {
+    "effects": [
+      {
+        "amount_minor": 2500,
+        "currency": "EUR",
+        "effect_id": "sandbox-effect.payment.001",
+        "effect_key": "effect-key.sandbox-payment.001",
+        "logical_operation_id": "operation.sandbox-payment.001",
+        "state": "PAYMENT_COMMITTED"
+      }
+    ],
+    "stored_effect_count": 1
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "artifact_digest": "sha256:03b849ff658fe47067ef970d105c3b6ad6b853736b058521bd9887c4bbde25b6",
+  "artifact_id": 9695722061,
+  "artifact_name": "ambiguous-payment-sandbox-evidence",
+  "generated_from_head_sha": "611f5389c0fcebc9821fb81f70e64ccd19b92024",
+  "generator": "tools/ambiguous_payment_sandbox.py",
+  "mutation_harness": "tools/test_ambiguous_payment_sandbox.py",
+  "repository": "safal207/DI",
+  "workflow_run_id": 33195920234,
+  "workflow_status": "success",
+  "claim_boundary": "Deterministic provider-neutral sandbox evidence; no external provider was called."
+}
