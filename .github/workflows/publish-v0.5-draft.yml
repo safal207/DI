@@ -1,0 +1,89 @@
+name: Publish DI v0.5-draft
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/publish-v0.5-draft.yml"
+      - "releases/v0.5-draft.md"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: publish-di-v0.5-draft
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.repository == 'safal207/DI'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      TAG: v0.5-draft
+      TARGET_COMMIT: a35a990c0c3d7715551b1cdaf933a58411f26c2b
+      RELEASE_NOTES: releases/v0.5-draft.md
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - name: Check out repository history
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Verify immutable release inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          git cat-file -e "${TARGET_COMMIT}^{commit}"
+          test -s "${RELEASE_NOTES}"
+
+      - name: Publish exact tag and prerelease idempotently
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          resolve_remote_tag() {
+            git fetch --force origin "refs/tags/${TAG}:refs/tags/${TAG}"
+            git rev-list -n 1 "${TAG}"
+          }
+
+          if gh release view "${TAG}" --repo "${GITHUB_REPOSITORY}" >/dev/null 2>&1; then
+            resolved="$(resolve_remote_tag)"
+            test "${resolved}" = "${TARGET_COMMIT}"
+            echo "Release ${TAG} already exists on ${resolved}; no mutation needed."
+          elif git ls-remote --exit-code --tags origin "refs/tags/${TAG}" >/dev/null 2>&1; then
+            resolved="$(resolve_remote_tag)"
+            test "${resolved}" = "${TARGET_COMMIT}"
+            gh release create "${TAG}" \
+              --repo "${GITHUB_REPOSITORY}" \
+              --verify-tag \
+              --title "DI v0.5-draft" \
+              --notes-file "${RELEASE_NOTES}" \
+              --prerelease
+          else
+            gh release create "${TAG}" \
+              --repo "${GITHUB_REPOSITORY}" \
+              --target "${TARGET_COMMIT}" \
+              --title "DI v0.5-draft" \
+              --notes-file "${RELEASE_NOTES}" \
+              --prerelease
+          fi
+
+          git fetch --force origin "refs/tags/${TAG}:refs/tags/${TAG}"
+          resolved="$(git rev-list -n 1 "${TAG}")"
+          test "${resolved}" = "${TARGET_COMMIT}"
+          gh release view "${TAG}" --repo "${GITHUB_REPOSITORY}" --json tagName,isPrerelease,url
+
+      - name: Close release tracking issue
+        shell: bash
+        run: |
+          set -euo pipefail
+          release_url="$(gh release view "${TAG}" --repo "${GITHUB_REPOSITORY}" --json url --jq .url)"
+          gh issue close 18 \
+            --repo "${GITHUB_REPOSITORY}" \
+            --reason completed \
+            --comment "Published **${TAG}** as a prerelease from exact validated commit \`${TARGET_COMMIT}\`: ${release_url}"
