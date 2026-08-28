@@ -84,6 +84,18 @@ jobs:
           cat generated/ambiguous-payment-sandbox/summary.json
           cat generated/ambiguous-payment-sandbox/mutation-report.json
 
+      - name: Verify committed sandbox evidence is reproducible
+        run: |
+          python tools/ambiguous_payment_sandbox.py \
+            --output-dir evidence/ambiguous-payment-sandbox \
+            --check
+          python tools/test_ambiguous_payment_sandbox.py \
+            --output evidence/ambiguous-payment-sandbox/mutation-report.json \
+            --check
+          diff -u \
+            evidence/ambiguous-payment-sandbox/cli-conformance-report.json \
+            generated/ambiguous-payment-sandbox/cli-conformance-report.json
+
       - name: Compile optional Stripe test-mode adapters
         run: |
           python -m py_compile \
