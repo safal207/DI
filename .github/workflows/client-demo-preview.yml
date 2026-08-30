@@ -1,0 +1,65 @@
+name: Validate DI client demo
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "demo/ambiguous-payment/**"
+      - "scripts/build-client-demo-data.py"
+      - "scripts/validate-client-demo.py"
+      - "evidence/ambiguous-payment-sandbox/summary.json"
+      - "evidence/ambiguous-payment-sandbox/mutation-report.json"
+      - ".github/workflows/client-demo-preview.yml"
+  pull_request:
+    paths:
+      - "demo/ambiguous-payment/**"
+      - "scripts/build-client-demo-data.py"
+      - "scripts/validate-client-demo.py"
+      - "evidence/ambiguous-payment-sandbox/summary.json"
+      - "evidence/ambiguous-payment-sandbox/mutation-report.json"
+      - ".github/workflows/client-demo-preview.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate-demo:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Verify demo data is reproducible
+        run: python scripts/build-client-demo-data.py --check
+
+      - name: Validate client demo
+        run: python scripts/validate-client-demo.py
+
+      - name: Smoke-test static serving
+        run: |
+          python -m http.server 8000 --directory demo/ambiguous-payment > /tmp/di-demo-server.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid"' EXIT
+          for attempt in 1 2 3 4 5; do
+            if curl --fail --silent --show-error http://127.0.0.1:8000/ > /tmp/di-demo-index.html; then
+              break
+            fi
+            sleep 1
+          done
+          grep -F "Did the payment fail" /tmp/di-demo-index.html
+          curl --fail --silent --show-error http://127.0.0.1:8000/demo-data.json > /tmp/di-demo-data.json
+          python -m json.tool /tmp/di-demo-data.json > /dev/null
+
+      - name: Upload client-demo artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: di-ambiguous-payment-client-demo
+          path: demo/ambiguous-payment/
+          if-no-files-found: error
+          retention-days: 30
