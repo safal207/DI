@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Interactive DI v0.5 demonstration of ambiguous payment recovery without a duplicate financial effect.">
+  <meta name="theme-color" content="#0b1020">
+  <meta property="og:title" content="DI v0.5 — Ambiguous Payment Recovery">
+  <meta property="og:description" content="Did the payment fail — or did only the response fail? See how evidence blocks a duplicate mutation.">
+  <meta property="og:type" content="website">
+  <title>DI v0.5 — Ambiguous Payment Recovery</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#demo">Skip to interactive demo</a>
+
+  <header class="site-header">
+    <a class="brand" href="https://github.com/safal207/DI" target="_blank" rel="noopener noreferrer" aria-label="Open the DI repository on GitHub">
+      <span class="brand-mark" aria-hidden="true">DI</span>
+      <span>
+        <strong>Doability Intelligence</strong>
+        <small>decision-to-effect integrity</small>
+      </span>
+    </a>
+    <nav aria-label="Primary navigation">
+      <a href="#evidence">Evidence</a>
+      <a href="#pilot">Pilot</a>
+      <a class="nav-cta" href="mailto:safal0645@gmail.com?subject=Ambiguous%20Mutation%20Verification">Request verification</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero-copy">
+        <div class="eyebrow"><span class="pulse-dot" aria-hidden="true"></span> DI v0.5 deterministic demonstration</div>
+        <h1 id="hero-title">Did the payment fail —<br><span>or did only the response fail?</span></h1>
+        <p class="hero-lead">A financial mutation can commit even when its acknowledgement disappears. A blind retry can turn uncertainty into a second effect. DI keeps the original operation identity, recovers authoritative state, and blocks an unsupported mutation.</p>
+        <div class="hero-actions">
+          <button class="button button-primary" id="run-safe" type="button">Run safe recovery</button>
+          <button class="button button-secondary" id="run-risk" type="button">Show blind-retry risk</button>
+        </div>
+        <p class="microcopy">No live provider. No real funds. Every measured result comes from the committed provider-neutral evidence pack.</p>
+      </div>
+
+      <aside class="hero-proof" aria-label="Reference result">
+        <div class="proof-topline">
+          <span>Reference result</span>
+          <span class="status-pill status-pass">PASS</span>
+        </div>
+        <div class="proof-number">1</div>
+        <p>committed effect</p>
+        <div class="proof-divider"></div>
+        <div class="proof-zero">0 duplicate effects</div>
+        <a href="https://github.com/safal207/DI/tree/main/evidence/ambiguous-payment-sandbox" target="_blank" rel="noopener noreferrer">Inspect the evidence →</a>
+      </aside>
+    </section>
+
+    <section class="demo-section" id="demo" aria-labelledby="demo-title">
+      <div class="section-heading">
+        <div>
+          <span class="section-kicker">Interactive failure path</span>
+          <h2 id="demo-title">One unknown state. Two very different decisions.</h2>
+        </div>
+        <div class="path-switch" role="group" aria-label="Choose a recovery path">
+          <button id="path-safe" class="path-button is-active" type="button" aria-pressed="true" data-path="safe">
+            <span class="path-icon" aria-hidden="true">✓</span>
+            DI recovery
+          </button>
+          <button id="path-risk" class="path-button" type="button" aria-pressed="false" data-path="unsafe">
+            <span class="path-icon" aria-hidden="true">!</span>
+            Blind retry
+          </button>
+        </div>
+      </div>
+
+      <div class="demo-grid">
+        <section class="timeline-card" aria-label="Recovery timeline">
+          <div class="card-header">
+            <div>
+              <span class="card-label">Selected path</span>
+              <h3 id="path-title">DI recovery</h3>
+            </div>
+            <span id="path-verdict" class="status-pill status-pass" aria-live="polite">PASS</span>
+          </div>
+          <ol class="timeline" id="timeline" aria-live="polite"></ol>
+          <div class="decision-note" id="decision-note"></div>
+          <div class="timeline-controls">
+            <button class="text-button" id="replay-path" type="button">↻ Replay path</button>
+            <span id="animation-status" class="sr-only" aria-live="polite"></span>
+          </div>
+        </section>
+
+        <aside class="metrics-card" aria-labelledby="metrics-title">
+          <div class="card-header">
+            <div>
+              <span class="card-label">Observed / inferred outcome</span>
+              <h3 id="metrics-title">Decision dashboard</h3>
+            </div>
+          </div>
+          <dl class="metrics" id="metrics"></dl>
+          <div class="verdict-panel verdict-safe" id="verdict-panel">
+            <span class="verdict-label">DI decision</span>
+            <strong id="verdict-action">ACCEPT_EXISTING_EFFECT</strong>
+            <p id="verdict-explanation">Authoritative evidence found the committed effect, so a second mutation is not permitted.</p>
+          </div>
+        </aside>
+      </div>
+
+      <p class="risk-disclaimer" id="risk-disclaimer" hidden>The blind-retry branch is an illustrative failure path. It is not a claim that any named provider or client behaves this way.</p>
+    </section>
+
+    <section class="principles" aria-labelledby="principles-title">
+      <div class="section-heading compact">
+        <div>
+          <span class="section-kicker">What DI actually checks</span>
+          <h2 id="principles-title">Evidence before another irreversible action.</h2>
+        </div>
+      </div>
+      <div class="principle-grid">
+        <article>
+          <span class="principle-number">01</span>
+          <h3>Operation identity</h3>
+          <p>One intended action retains one logical identity across timeout, retry, and worker change.</p>
+        </article>
+        <article>
+          <span class="principle-number">02</span>
+          <h3>Commit evidence</h3>
+          <p>A transport timeout remains <code>UNKNOWN</code> until a supported source establishes committed, not committed, or still unknown.</p>
+        </article>
+        <article>
+          <span class="principle-number">03</span>
+          <h3>Next-action authority</h3>
+          <p>A confirmed effect permits acceptance or stop — not a fresh mutation disguised as recovery.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="evidence-section" id="evidence" aria-labelledby="evidence-title">
+      <div class="evidence-copy">
+        <span class="section-kicker">Evidence, not magic</span>
+        <h2 id="evidence-title">Every headline number has a trail.</h2>
+        <p>The demo is a presentation layer. The source of truth remains the open repository, deterministic sandbox, machine-readable reports, and adversarial mutation suite.</p>
+      </div>
+      <div class="evidence-links">
+        <a href="https://github.com/safal207/DI" target="_blank" rel="noopener noreferrer">
+          <span>Canonical repository</span><strong>Source, schemas, validators</strong><b aria-hidden="true">↗</b>
+        </a>
+        <a href="https://github.com/safal207/DI/blob/main/docs/case-study-ambiguous-payment-recovery.md" target="_blank" rel="noopener noreferrer">
+          <span>Case study</span><strong>Failure model and claim boundary</strong><b aria-hidden="true">↗</b>
+        </a>
+        <a href="https://github.com/safal207/DI/tree/main/evidence/ambiguous-payment-sandbox" target="_blank" rel="noopener noreferrer">
+          <span>Evidence pack</span><strong>Trace, reports, provenance</strong><b aria-hidden="true">↗</b>
+        </a>
+        <a href="https://github.com/safal207/DI/blob/main/docs/commercial/paid-pilot-one-pager.md" target="_blank" rel="noopener noreferrer">
+          <span>Paid pilot scope</span><strong>Inputs, outputs, stop conditions</strong><b aria-hidden="true">↗</b>
+        </a>
+      </div>
+    </section>
+
+    <section class="pilot-section" id="pilot" aria-labelledby="pilot-title">
+      <div class="pilot-copy">
+        <span class="section-kicker">Bounded commercial next step</span>
+        <h2 id="pilot-title">Test one high-risk mutation flow — not your whole company.</h2>
+        <p>Choose one payment, wallet, refund, order, subscription, smart-contract relay, or agent tool mutation where timeout or takeover could create a second effect.</p>
+        <a class="button button-primary button-large" href="mailto:safal0645@gmail.com?subject=Ambiguous%20Mutation%20Verification&body=Selected%20test-mode%20flow%3A%0AExpected%20terminal%20state%3A%0AAuthoritative%20lookup%20source%3A%0AProhibited%20actions%3A">Request a bounded test-mode verification</a>
+      </div>
+      <div class="pilot-scope" aria-label="Pilot scope">
+        <div><span>Scope</span><strong>1 selected mutation flow</strong></div>
+        <div><span>Environment</span><strong>Sandbox / test mode only</strong></div>
+        <div><span>Output</span><strong>PASS / FAIL / BLOCKED evidence</strong></div>
+        <div><span>Duration hypothesis</span><strong>1–2 focused working days</strong></div>
+        <div><span>Pricing hypothesis</span><strong>USD 1,500–3,000</strong></div>
+      </div>
+    </section>
+
+    <section class="boundary" aria-labelledby="boundary-title">
+      <span class="boundary-icon" aria-hidden="true">◇</span>
+      <div>
+        <h2 id="boundary-title">Claim boundary</h2>
+        <p>This is a deterministic provider-neutral demonstration. It validates a supplied evidence chain and targeted mutations. It does not prove external exactly-once behavior, provider endorsement, production safety, global completeness, or the absence of every possible duplicate effect. External companies are validation cases — not members or owners of DI, DIF, DRP, or TIP.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div>
+      <strong>Alexey Safonov</strong>
+      <span>Independent QA — payment recovery and financial-state verification</span>
+    </div>
+    <div class="footer-links">
+      <a href="https://github.com/safal207/DI/releases/tag/v0.5-draft" target="_blank" rel="noopener noreferrer">DI v0.5-draft</a>
+      <a href="https://github.com/safal207/DI/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">MIT License</a>
+    </div>
+  </footer>
+</body>
+</html>
