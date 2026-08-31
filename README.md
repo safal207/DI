@@ -41,6 +41,7 @@ unsafe mutations rejected:  6 / 6
 
 Start here:
 
+- [Live interactive demo](https://di-ambiguous-payment-recovery.lovable.app) — public mobile-first presentation; this repository remains the source of truth.
 - [Ambiguous-payment case study](docs/case-study-ambiguous-payment-recovery.md)
 - [Evidence index](EVIDENCE.md)
 - [Reproducible evidence pack](evidence/ambiguous-payment-sandbox/README.md)
@@ -319,6 +320,7 @@ The scan does not add, read, or rotate external credentials. Its purpose is to d
 - public `v0.5-draft` prerelease: published.
 - v0.5 architecture freeze: active.
 - deterministic ambiguous-payment evidence: reproducible and CI-validated.
+- public client demo: published at [`di-ambiguous-payment-recovery.lovable.app`](https://di-ambiguous-payment-recovery.lovable.app); repository artifacts remain authoritative.
 - unsafe mutations rejected: 6 / 6.
 - v0.6 decision: deferred pending an external counterexample.
 
