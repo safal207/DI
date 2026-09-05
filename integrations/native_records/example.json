@@ -1,0 +1,185 @@
+{
+  "profile": "native-read-only-recovery-v0.1",
+  "records": {
+    "DIF": {
+      "id": "intent.synthetic-recovery.001",
+      "version": 1,
+      "statement": "Resolve the existing payment status without issuing another payment.",
+      "confirmedByHuman": true,
+      "sourceSignalIds": [
+        "synthetic-user-input.001"
+      ],
+      "createdAt": "2026-09-05T12:00:00Z"
+    },
+    "DI": {
+      "check_id": "feasibility.synthetic-recovery.001",
+      "request": "Resolve the existing payment status without issuing another payment.",
+      "inferred_intent": "Resolve the existing payment status without issuing another payment.",
+      "capabilities": [
+        "Read an in-memory synthetic payment-status receipt."
+      ],
+      "limitations": [
+        "No external provider or live effect is observed."
+      ],
+      "constraints": [
+        "Read-only example. No mutation or real money."
+      ],
+      "feasible_actions": [
+        {
+          "action": "Read the synthetic payment-status receipt; do not submit another payment.",
+          "status": "allowed"
+        }
+      ],
+      "blocked_actions": [
+        {
+          "action": "Submit another payment.",
+          "reason": "Existing outcome has not been resolved before the read."
+        }
+      ],
+      "unknowns": [],
+      "recommended_next_step": "Read the synthetic payment-status receipt; do not submit another payment."
+    },
+    "DRP": {
+      "record_id": "decision.synthetic-recovery.001",
+      "timestamp": "2026-09-05T12:01:00Z",
+      "context": "Resolve the existing payment status without issuing another payment.",
+      "decision": "Read the synthetic payment-status receipt; do not submit another payment.",
+      "options": [
+        "Read the synthetic payment-status receipt; do not submit another payment.",
+        "Stop and request more evidence."
+      ],
+      "status": "complete",
+      "rationale": "Synthetic decision: read existing state before considering another action.",
+      "parent_record_ids": [],
+      "child_record_ids": [],
+      "metadata": {
+        "native_bridge": {
+          "envelope_id": "envelope.synthetic-recovery.001",
+          "intent_id": "intent.synthetic-recovery.001",
+          "feasibility_id": "feasibility.synthetic-recovery.001",
+          "transition_id": "transition.synthetic-recovery.001",
+          "commitment_recorded": true,
+          "mode": "read-only-example"
+        },
+        "synthetic": true
+      }
+    },
+    "TIP": {
+      "id": "transition.synthetic-recovery.001",
+      "title": "Synthetic read-only payment-state recovery",
+      "status": "reviewed",
+      "state": {
+        "summary": "PAYMENT_OUTCOME_UNKNOWN",
+        "actors": [
+          "synthetic-assessor"
+        ],
+        "known_facts": [
+          "All records are authored test data, not provider observations."
+        ],
+        "constraints": [
+          "No new payment."
+        ]
+      },
+      "tension": {
+        "summary": "A simulated acknowledgement was lost.",
+        "kind": "ambiguity",
+        "severity": "medium"
+      },
+      "cause": {
+        "cause_type": "risk",
+        "summary": "An unknown acknowledgement is not proof of a failed payment.",
+        "supporting_signals": [
+          "synthetic:lost-acknowledgement.001"
+        ],
+        "basis": "Authored provider-neutral example, not external evidence.",
+        "confidence": 0.7
+      },
+      "transition": {
+        "from": "PAYMENT_OUTCOME_UNKNOWN",
+        "to": "EXISTING_PAYMENT_CONFIRMED",
+        "trigger": "Read the synthetic receipt.",
+        "reversibility": "high",
+        "impact_scope": "local",
+        "feedback_latency": "immediate",
+        "expected_consequence": "Recover the simulated existing payment state without another mutation."
+      },
+      "cooperation": {
+        "participants": [
+          {
+            "name": "synthetic-user",
+            "goal": "One payment only.",
+            "risk": "Duplicate mutation."
+          }
+        ],
+        "shared_upside": "Resolve uncertainty without another payment.",
+        "defection_risk": "low",
+        "stability": "stable",
+        "recommendation": "wait"
+      },
+      "action": {
+        "summary": "Read the synthetic payment-status receipt; do not submit another payment.",
+        "owner": "synthetic-assessor"
+      },
+      "review": {
+        "summary": "The authored receipt states that the existing payment succeeded.",
+        "actual_consequence": "Synthetic state read only; no external execution.",
+        "evidence": [
+          "synthetic:existing-payment-receipt.001"
+        ],
+        "next_state": "EXISTING_PAYMENT_CONFIRMED"
+      }
+    }
+  },
+  "sha256": {
+    "DIF": "2fdea4a1952e06c9b99d60c79258999b5472b705f72049968fc498720fcefa38",
+    "DI": "7616eba18f05499179ff0e3f4f6415d82a410afa6670118cadd106fd0889fa05",
+    "DRP": "a890204618185e300ed1f89efefa9b40bab7742cfb4acf76c43198dd7340908a",
+    "TIP": "5af03e1a3435199f8b8b4cbae3f6fb87033cd9e06da69d6021436bef305d0632"
+  },
+  "envelope": {
+    "envelope_version": "0.1",
+    "envelope_id": "envelope.synthetic-recovery.001",
+    "dif": {
+      "intent_id": "intent.synthetic-recovery.001",
+      "status": "confirmed",
+      "summary": "Resolve the existing payment status without issuing another payment.",
+      "human_confirmed": true
+    },
+    "di": {
+      "feasibility_id": "feasibility.synthetic-recovery.001",
+      "intent_id": "intent.synthetic-recovery.001",
+      "status": "feasible",
+      "allowed_paths": [
+        "Read the synthetic payment-status receipt; do not submit another payment."
+      ],
+      "blocked_paths": [
+        "Submit another payment."
+      ],
+      "constraints": [
+        "Read-only example. No mutation or real money."
+      ]
+    },
+    "drp": {
+      "record_id": "decision.synthetic-recovery.001",
+      "feasibility_id": "feasibility.synthetic-recovery.001",
+      "decision_summary": "Read the synthetic payment-status receipt; do not submit another payment.",
+      "status": "committed"
+    },
+    "tip": {
+      "transition_id": "transition.synthetic-recovery.001",
+      "decision_record_id": "decision.synthetic-recovery.001",
+      "starting_state": "PAYMENT_OUTCOME_UNKNOWN",
+      "target_state": "EXISTING_PAYMENT_CONFIRMED",
+      "action_summary": "Read the synthetic payment-status receipt; do not submit another payment.",
+      "status": "reviewed"
+    },
+    "review": {
+      "transition_id": "transition.synthetic-recovery.001",
+      "status": "reviewed",
+      "evidence_references": [
+        "synthetic:existing-payment-receipt.001"
+      ],
+      "next_state": "EXISTING_PAYMENT_CONFIRMED"
+    }
+  }
+}

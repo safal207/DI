@@ -1,0 +1,74 @@
+name: Native record bridge
+
+on:
+  pull_request:
+    paths:
+      - 'integrations/native_records/**'
+      - 'docs/native-record-bridge.md'
+      - 'scripts/validate-fixtures.py'
+      - 'schemas/feasibility-check.schema.json'
+      - 'schemas/decision-transition-envelope.schema.json'
+      - '.github/workflows/native-record-bridge.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'integrations/native_records/**'
+      - 'docs/native-record-bridge.md'
+      - 'scripts/validate-fixtures.py'
+      - 'schemas/feasibility-check.schema.json'
+      - 'schemas/decision-transition-envelope.schema.json'
+      - '.github/workflows/native-record-bridge.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  native-bridge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.11', '3.12']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: safal207/DIF
+          ref: 3d1c4df525d894c67eae5b9355b2dc0c77075673
+          path: .native/DIF
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: safal207/DRP
+          ref: 92e63d7d4eeb55f8eb61956da002dc8951bab1c6
+          path: .native/DRP
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: safal207/transition-intelligence-protocol
+          ref: d21c57a5ccff0af569b24db0097522ee1e834388
+          path: .native/TIP
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install integration-only dependencies
+        run: python -m pip install -r integrations/native_records/requirements.txt
+      - name: Native bridge regressions
+        run: python -m unittest discover -s integrations/native_records -p 'test_*.py' -v
+      - name: Existing DI harness and fixtures remain valid
+        run: |
+          python -m unittest discover -s tests -v
+          python scripts/validate-fixtures.py
+      - name: Write deterministic native report
+        run: python integrations/native_records/bridge.py integrations/native_records/example.json > native-record-report.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: native-record-report-${{ matrix.python-version }}
+          path: native-record-report.json
+          if-no-files-found: error
