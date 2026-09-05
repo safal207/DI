@@ -71,6 +71,7 @@ schemas/                          JSON Schemas
 fixtures/                         valid and invalid schema fixtures
 examples/                         applied DI examples
 scripts/validate-fixtures.py      minimal fixture validator
+tests/                            harness regression tests
 .github/workflows/                CI validation workflow
 ```
 
@@ -85,6 +86,22 @@ python scripts/validate-fixtures.py
 ```
 
 The script uses only Python standard library modules.
+
+To run the harness regression tests, run:
+
+```bash
+python -m unittest discover -s tests -v
+```
+
+### Harness failure vs expected rejection
+
+A fixture case declared as expected-to-fail passes only when the fixture is
+readable and the rules under test reject it (a semantic rejection). Anything
+that prevents the case from being evaluated - a missing file, invalid JSON,
+invalid UTF-8, an unreadable path, a non-object schema root, or an exception
+raised by the validation code - is a harness failure. It is printed as
+`HARNESS-FAIL` and always fails the case, so a deleted or corrupted negative
+fixture can never be silently scored as a passing integrity check.
 
 ## Pull Request Guidelines
 
@@ -111,6 +128,7 @@ Explain whether this affects capabilities, limitations, constraints, examples, f
 ## Validation
 
 - [ ] `python scripts/validate-fixtures.py` passes
+- [ ] `python -m unittest discover -s tests` passes
 
 ## Notes
 
