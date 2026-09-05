@@ -1,0 +1,40 @@
+{
+  "profile": "native-read-only-recovery-v0.1",
+  "repositories": {
+    "DI": {
+      "repository": "safal207/DI",
+      "commit": "2ef24ffcca201d3957e975d3624eec11a59bfa86",
+      "module": "scripts/validate-fixtures.py",
+      "files": [
+        "scripts/validate-fixtures.py",
+        "schemas/feasibility-check.schema.json",
+        "schemas/decision-transition-envelope.schema.json"
+      ]
+    },
+    "DIF": {
+      "repository": "safal207/DIF",
+      "commit": "3d1c4df525d894c67eae5b9355b2dc0c77075673",
+      "files": [
+        "schemas/confirmed-intent.schema.json"
+      ]
+    },
+    "DRP": {
+      "repository": "safal207/DRP",
+      "commit": "92e63d7d4eeb55f8eb61956da002dc8951bab1c6",
+      "module": "tools/drp_validator.py",
+      "files": [
+        "tools/drp_validator.py",
+        "VERSION"
+      ]
+    },
+    "TIP": {
+      "repository": "safal207/transition-intelligence-protocol",
+      "commit": "d21c57a5ccff0af569b24db0097522ee1e834388",
+      "module": "tip/validator.py",
+      "files": [
+        "tip/validator.py",
+        "schemas/tip-record.schema.json"
+      ]
+    }
+  }
+}
