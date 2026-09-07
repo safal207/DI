@@ -1,0 +1,13 @@
+{
+  "id": "dif.intent.payment-recovery.native.001",
+  "version": 1,
+  "statement": "Recover one failed payment attempt without creating an unintended duplicate financial action.",
+  "confirmedByHuman": true,
+  "sourceSignalIds": [
+    "signal.payment-recovery.native.001"
+  ],
+  "sourceCorrectionIds": [
+    "correction.payment-recovery.native.001"
+  ],
+  "createdAt": "2026-09-07T10:00:00Z"
+}
