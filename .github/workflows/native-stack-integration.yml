@@ -65,7 +65,7 @@ jobs:
       - name: Run targeted negative matrix
         working-directory: DI
         run: >-
-          python integration/native-stack-v0.1/test_native_stack_bridge.py
+          python integration/native-stack-v0.1/run_negative_matrix.py
           --dif-root ../external/DIF
           --drp-root ../external/DRP
           --tip-root ../external/TIP
