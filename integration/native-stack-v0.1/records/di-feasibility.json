@@ -1,0 +1,54 @@
+{
+  "check_id": "di.feasibility.payment-recovery.native.001",
+  "request": "Recover one failed payment attempt without creating an unintended duplicate financial action.",
+  "inferred_intent": "Establish the authoritative state of the prior payment operation and perform at most one bounded idempotent replay only if recovery is still required.",
+  "capabilities": [
+    "read the authoritative transaction state of a prior operation",
+    "replay a prior operation through a verified idempotency contract",
+    "record the decision and observed transition for review"
+  ],
+  "limitations": [
+    "the bridge cannot prove that any external evidence reference is authentic",
+    "the bridge performs no execution and holds no execution authority",
+    "terminal provider state may still be pending at decision time"
+  ],
+  "constraints": [
+    "recovery must preserve the identity of the original payment operation",
+    "at most one recovery mutation may be attempted for this confirmed intent",
+    "no provider-specific adapter, credential, or live payment call is involved"
+  ],
+  "feasible_actions": [
+    {
+      "action": "read the authoritative transaction state before another mutation",
+      "status": "allowed",
+      "conditions": [
+        "an authoritative transaction lookup is available"
+      ]
+    },
+    {
+      "action": "replay the original operation once through the verified idempotency contract",
+      "status": "allowed_with_constraints",
+      "conditions": [
+        "idempotency scope and key semantics are verified",
+        "the replay preserves the original operation identity"
+      ]
+    },
+    {
+      "action": "wait for stronger terminal evidence before another mutation",
+      "status": "allowed",
+      "conditions": [
+        "later terminal evidence is expected"
+      ]
+    }
+  ],
+  "blocked_actions": [
+    {
+      "action": "blind non-idempotent replay while the prior commit state is unresolved",
+      "reason": "it can create a duplicate financial effect that the confirmed intent excludes"
+    }
+  ],
+  "unknowns": [
+    "how long the provider may delay a terminal state for this operation"
+  ],
+  "recommended_next_step": "Read the authoritative transaction state, then perform at most one verified idempotent replay if recovery is still required."
+}
