@@ -19,6 +19,9 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Run harness regression tests
+        run: python -m unittest discover -s tests -v
+
       - name: Validate fixtures
         run: python scripts/validate-fixtures.py
 

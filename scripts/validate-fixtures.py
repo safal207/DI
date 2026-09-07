@@ -12,6 +12,15 @@ also name the exact failed cycle they recover from.
 
 For the Recovery Decision Matrix, the script validates that a selected recovery
 action is justified by the evidence and safety conditions carried by the record.
+
+Harness failure vs expected rejection
+-------------------------------------
+A case declared with ``expected_pass=False`` passes only when the fixture is
+readable and is rejected by the rules under test (a *semantic rejection*). Any
+failure to read, decode, or prepare a fixture or schema - a missing file, invalid
+JSON, invalid UTF-8, an unreadable path, a non-object schema root, or a crash in
+the validation code - is a *harness failure*: it is reported as ``HARNESS-FAIL``
+and always fails the case, because nothing about the rules was actually tested.
 """
 
 from __future__ import annotations
@@ -124,14 +133,28 @@ CASES = [
 ]
 
 
+class HarnessError(Exception):
+    """A defect in the test harness inputs, not a semantic rejection.
+
+    Raised when a fixture or schema cannot be read, decoded, or prepared.
+    A HarnessError always fails the case, including cases declared with
+    ``expected_pass=False``: an unreadable negative fixture proves nothing
+    about the rules it is supposed to exercise.
+    """
+
+
 def load_json(path: Path) -> Any:
     if not path.exists():
-        raise ValueError(f"file does not exist: {path}")
+        raise HarnessError(f"file does not exist: {path}")
     try:
         with path.open("r", encoding="utf-8") as handle:
             return json.load(handle)
     except json.JSONDecodeError as exc:
-        raise ValueError(f"invalid JSON in {path}: {exc}") from exc
+        raise HarnessError(f"invalid JSON in {path}: {exc}") from exc
+    except UnicodeDecodeError as exc:
+        raise HarnessError(f"invalid UTF-8 in {path}: {exc}") from exc
+    except OSError as exc:
+        raise HarnessError(f"cannot read {path}: {exc}") from exc
 
 
 def type_matches(value: Any, expected_type: str) -> bool:
@@ -429,10 +452,26 @@ def validate_recovery_matrix_semantics(instance: Any) -> list[str]:
 def run_case(fixture_rel: str, schema_rel: str, expected_pass: bool) -> bool:
     fixture_path = ROOT / fixture_rel
     schema_path = ROOT / schema_rel
+    expected_label = "pass" if expected_pass else "fail"
+
+    def harness_failure(reason: str) -> bool:
+        print(f"HARNESS-FAIL {fixture_rel} expected={expected_label}")
+        print(f"  - {reason}")
+        print("  - harness error: the case could not be evaluated at all")
+        return False
 
     try:
         fixture = load_json(fixture_path)
         schema = load_json(schema_path)
+    except HarnessError as exc:
+        return harness_failure(str(exc))
+
+    if not isinstance(schema, dict):
+        return harness_failure(
+            f"schema root must be a JSON object, got {type(schema).__name__}: {schema_rel}"
+        )
+
+    try:
         errors = validate(fixture, schema)
         if schema_rel == ENVELOPE_SCHEMA:
             errors.extend(validate_envelope_semantics(fixture))
@@ -440,11 +479,15 @@ def run_case(fixture_rel: str, schema_rel: str, expected_pass: bool) -> bool:
             errors.extend(validate_cycle_chain_semantics(fixture))
         elif schema_rel == MATRIX_SCHEMA:
             errors.extend(validate_recovery_matrix_semantics(fixture))
-    except ValueError as exc:
-        errors = [str(exc)]
+    except HarnessError as exc:
+        # e.g. a nested schema load performed by the cycle-chain semantics.
+        return harness_failure(str(exc))
+    except Exception as exc:  # noqa: BLE001 - never score a crash as a rejection
+        return harness_failure(
+            f"validation machinery raised {type(exc).__name__}: {exc}"
+        )
 
     actual_pass = not errors
-    expected_label = "pass" if expected_pass else "fail"
 
     if actual_pass == expected_pass:
         print(f"PASS {fixture_rel} expected={expected_label}")
