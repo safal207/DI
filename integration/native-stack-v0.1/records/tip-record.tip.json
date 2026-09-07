@@ -1,0 +1,97 @@
+{
+  "id": "tip.payment-recovery.native.001",
+  "title": "Bounded idempotent recovery of one failed payment attempt",
+  "status": "reviewed",
+  "state": {
+    "summary": "EXECUTION_FAILED_CONFIRMED",
+    "actors": [
+      "intent owner",
+      "recovery operator",
+      "authoritative transaction store"
+    ],
+    "known_facts": [
+      "the original operation identifier is known",
+      "the idempotency scope and key semantics are verified",
+      "the prior commit state was unresolved at decision time"
+    ],
+    "constraints": [
+      "recovery must preserve the original payment operation identity",
+      "at most one recovery mutation is permitted"
+    ]
+  },
+  "tension": {
+    "summary": "Waiting can leave the payment unresolved while blind replay can create a duplicate financial effect.",
+    "kind": "risk",
+    "severity": "high"
+  },
+  "cause": {
+    "cause_type": "risk",
+    "summary": "The prior attempt failed before a terminal state was observed, so its commit state was unknown.",
+    "supporting_signals": [
+      "failed execution with no terminal state",
+      "unresolved commit state on the original operation"
+    ],
+    "basis": "provider-neutral observed execution and authoritative-state evidence references",
+    "parent_cause": null,
+    "confidence": 0.82,
+    "confidence_assessment": {
+      "assessor": "recorded mixed human-system review",
+      "assessor_type": "mixed",
+      "method": "judgment",
+      "rationale": "The original operation identity and idempotency contract were both established before the bounded replay decision.",
+      "alternative_explanations": [
+        "the original operation may already have reached a terminal state that had not propagated",
+        "the observed failure may originate in the caller rather than the operation itself"
+      ],
+      "human_confirmed": true,
+      "human_confirmer": "intent owner"
+    }
+  },
+  "transition": {
+    "from": "EXECUTION_FAILED_CONFIRMED",
+    "to": "TRANSACTION_STATE_ESTABLISHED",
+    "trigger": "committed bounded idempotent recovery decision",
+    "reversibility": "medium",
+    "impact_scope": "bounded",
+    "feedback_latency": "short",
+    "expected_consequence": "The authoritative transaction state is established without a second operation identity.",
+    "uncertainty": "medium"
+  },
+  "cooperation": {
+    "participants": [
+      {
+        "name": "intent owner",
+        "goal": "resolve the payment without a duplicate effect",
+        "risk": "unintended second financial effect"
+      },
+      {
+        "name": "recovery operator",
+        "goal": "bounded auditable recovery",
+        "risk": "acting on stale state"
+      },
+      {
+        "name": "authoritative transaction store",
+        "goal": "one consistent terminal state",
+        "risk": "delayed terminal propagation"
+      }
+    ],
+    "shared_upside": "One resolved operation with a reviewable recovery chain.",
+    "defection_risk": "low",
+    "stability": "stable",
+    "recommendation": "commit"
+  },
+  "action": {
+    "summary": "Execute the committed idempotent recovery path once and observe the authoritative transaction result.",
+    "review_after": "authoritative terminal state observed",
+    "owner": "recovery operator"
+  },
+  "review": {
+    "summary": "The bounded replay resolved the original operation under the provider-neutral example.",
+    "actual_consequence": "TRANSACTION_STATE_ESTABLISHED",
+    "evidence": [
+      "evidence://payment-provider/original-operation-id",
+      "evidence://payment-provider/terminal-state"
+    ],
+    "next_state": "RECOVERY_CONFIRMED"
+  }
+}
