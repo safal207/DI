@@ -1,0 +1,30 @@
+{
+  "record_id": "drp.payment-recovery.native.001",
+  "timestamp": "2026-09-07T10:05:00Z",
+  "context": "A prior payment attempt has an unresolved commit state, and the confirmed intent requires recovery without an unintended duplicate financial effect.",
+  "decision": "Commit to one bounded idempotent replay of the original operation and prohibit path substitution.",
+  "options": [
+    "read the authoritative transaction state before another mutation",
+    "replay the original operation once through the verified idempotency contract",
+    "wait for stronger terminal evidence before another mutation",
+    "blind non-idempotent replay while the prior commit state is unresolved"
+  ],
+  "status": "complete",
+  "rationale": "The verified idempotency contract preserves the original operation identity while bounding recovery to one replay; blind replay is excluded because it can create a duplicate effect.",
+  "impact": 1,
+  "tags": [
+    "payment-recovery",
+    "provider-neutral",
+    "native-stack-bridge"
+  ],
+  "metadata": {
+    "bridge_id": "di.integration.native-stack-v0.1",
+    "upstream_ids": {
+      "dif_intent_id": "dif.intent.payment-recovery.native.001",
+      "di_check_id": "di.feasibility.payment-recovery.native.001",
+      "tip_transition_id": "tip.payment-recovery.native.001"
+    },
+    "selected_path": "replay the original operation once through the verified idempotency contract",
+    "provenance_note": "Full DRP-format record used only by the opt-in DI native-stack conformance bridge; no provider or execution claim."
+  }
+}
