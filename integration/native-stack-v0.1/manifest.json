@@ -1,0 +1,53 @@
+{
+  "bridge_version": "0.1",
+  "bridge_id": "di.integration.native-stack-v0.1",
+  "description": "Opt-in native-record conformance bridge for one provider-neutral DIF → DI → DRP → TIP chain. It is an integration proof, not a protocol and not a merger of the canonical projects.",
+  "di_repository": {
+    "repository": "safal207/DI",
+    "base_commit": "e6dba82590f3470b1f9bfa56ca5132f60eb661b5",
+    "feasibility_schema": "schemas/feasibility-check.schema.json",
+    "projection_schema": "schemas/decision-transition-envelope.schema.json",
+    "projection_semantics": "scripts/validate-fixtures.py"
+  },
+  "external_repositories": {
+    "dif": {
+      "repository": "safal207/DIF",
+      "commit": "a5a8d330a6308a4c7990be2a4d46211cc030d05d",
+      "schema": "schemas/confirmed-intent.schema.json",
+      "validation_mode": "draft-2020-12-schema"
+    },
+    "drp": {
+      "repository": "safal207/DRP",
+      "commit": "92e63d7d4eeb55f8eb61956da002dc8951bab1c6",
+      "schema": "schema/drp.schema.json",
+      "validator": "tools/drp_validator.py",
+      "validation_mode": "native-validator"
+    },
+    "tip": {
+      "repository": "safal207/transition-intelligence-protocol",
+      "commit": "6b272febd048cf8e218417b3c0506c7fa4fa43fa",
+      "schema": "schemas/tip-record.schema.json",
+      "validator": "python -m tip validate",
+      "validation_mode": "native-cli"
+    }
+  },
+  "body_hashes": {
+    "records/confirmed-intent.json": "bacd51409453fa6b2e3a782b086f8bf0d3b5b3d3a21375bc93b02fc5ee9c20b8",
+    "records/di-feasibility.json": "c3d9b803f8ef47eedb6a0dbb541b8789a1c60c982194f00ab249d11d0b9e6c0a",
+    "records/drp-record.json": "930afd8dd6404d780327d88b2a63921f46300f2ae1e16e72deddd07399d59f0f",
+    "records/tip-record.tip.json": "7d9bf986ae972a764f9de5ce0eb6b3ac30f4d81059b529f190f1102943d90da5",
+    "projection-envelope.json": "fd69cb762230844abc4ee73d9f9365f4f46d82cfb62b8abaf848f84b7660d553"
+  },
+  "status_mapping": {
+    "drp_to_projection": {
+      "complete": "committed"
+    },
+    "precondition": "The DRP record must already be valid under the pinned DRP validator and represent the bridge's chosen decision as complete. No other DRP status is mapped.",
+    "note": "DRP 'complete' and DI projection 'committed' are not the same native lifecycle state; this is an explicit bridge rule for this single conformance example."
+  },
+  "claim_boundary": {
+    "evidence_authenticity": "not_verified",
+    "execution_authority": "not_claimed",
+    "external_provider_used": false
+  }
+}
