@@ -1,0 +1,76 @@
+{
+  "id": "tip.payment-recovery.native.001",
+  "title": "Recover ambiguous payment state without duplicate mutation",
+  "status": "reviewed",
+  "state": {
+    "summary": "commit_state_unknown",
+    "actors": [
+      "payment client",
+      "authoritative transaction state"
+    ],
+    "known_facts": [
+      "One logical payment operation was initiated.",
+      "The acknowledgement was lost."
+    ],
+    "constraints": [
+      "Do not create a second payment mutation while the first operation may already be committed."
+    ]
+  },
+  "tension": {
+    "summary": "The client needs a definitive next step while the financial side effect may already exist.",
+    "kind": "ambiguity",
+    "severity": "high"
+  },
+  "cause": {
+    "cause_type": "risk",
+    "summary": "Transport ambiguity hides whether the existing logical operation already produced a committed financial effect.",
+    "supporting_signals": [
+      "request acknowledgement was lost",
+      "commit state is not locally known"
+    ],
+    "basis": "provider-neutral ambiguous-commit recovery scenario",
+    "confidence": 0.95
+  },
+  "transition": {
+    "from": "commit_state_unknown",
+    "to": "established_transaction_state",
+    "trigger": "authoritative read of the existing logical operation",
+    "reversibility": "high",
+    "impact_scope": "bounded",
+    "feedback_latency": "short",
+    "expected_consequence": "Resolve whether the existing payment effect committed without creating another mutation.",
+    "uncertainty": "low"
+  },
+  "cooperation": {
+    "participants": [
+      {
+        "name": "payment client",
+        "goal": "avoid duplicate financial effects",
+        "risk": "blind retry creates a second effect"
+      },
+      {
+        "name": "transaction state source",
+        "goal": "report the authoritative state of the existing logical operation",
+        "risk": "stale or non-authoritative observations mislead recovery"
+      }
+    ],
+    "shared_upside": "A single existing effect is accepted when proven, and unnecessary mutation is avoided.",
+    "defection_risk": "low",
+    "stability": "stable",
+    "recommendation": "wait"
+  },
+  "action": {
+    "summary": "Read the authoritative state of the existing logical operation; do not create a new payment effect.",
+    "review_after": "Immediately after the authoritative state read returns.",
+    "owner": "bounded recovery workflow"
+  },
+  "review": {
+    "summary": "Authoritative recovery found the existing committed effect; no second mutation was issued.",
+    "actual_consequence": "The ambiguous operation resolved to one existing committed effect.",
+    "evidence": [
+      "evidence://native-stack/payment-recovery/authoritative-read",
+      "evidence://native-stack/payment-recovery/single-effect"
+    ],
+    "next_state": "SUCCESS_CONFIRMED"
+  }
+}

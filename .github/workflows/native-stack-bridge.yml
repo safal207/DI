@@ -1,0 +1,127 @@
+name: Validate native record bridge
+
+on:
+  pull_request:
+    paths:
+      - "integrations/native-stack-v0.1/**"
+      - "scripts/validate-native-stack-bridge.py"
+      - "tests/test_native_stack_bridge.py"
+      - ".github/workflows/native-stack-bridge.yml"
+      - "schemas/feasibility-check.schema.json"
+      - "schemas/decision-transition-envelope.schema.json"
+      - "scripts/validate-fixtures.py"
+  push:
+    branches:
+      - main
+    paths:
+      - "integrations/native-stack-v0.1/**"
+      - "scripts/validate-native-stack-bridge.py"
+      - "tests/test_native_stack_bridge.py"
+      - ".github/workflows/native-stack-bridge.yml"
+      - "schemas/feasibility-check.schema.json"
+      - "schemas/decision-transition-envelope.schema.json"
+      - "scripts/validate-fixtures.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  native-stack:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out DI
+        uses: actions/checkout@v4
+
+      - name: Check out pinned DIF
+        uses: actions/checkout@v4
+        with:
+          repository: safal207/DIF
+          ref: a5a8d330a6308a4c7990be2a4d46211cc030d05d
+          path: _upstream/DIF
+
+      - name: Check out pinned DRP
+        uses: actions/checkout@v4
+        with:
+          repository: safal207/DRP
+          ref: 92e63d7d4eeb55f8eb61956da002dc8951bab1c6
+          path: _upstream/DRP
+
+      - name: Check out pinned TIP
+        uses: actions/checkout@v4
+        with:
+          repository: safal207/transition-intelligence-protocol
+          ref: 6b272febd048cf8e218417b3c0506c7fa4fa43fa
+          path: _upstream/TIP
+
+      - name: Verify pinned upstream revisions
+        shell: bash
+        run: |
+          test "$(git -C _upstream/DIF rev-parse HEAD)" = "a5a8d330a6308a4c7990be2a4d46211cc030d05d"
+          test "$(git -C _upstream/DRP rev-parse HEAD)" = "92e63d7d4eeb55f8eb61956da002dc8951bab1c6"
+          test "$(git -C _upstream/TIP rev-parse HEAD)" = "6b272febd048cf8e218417b3c0506c7fa4fa43fa"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install bridge-only schema dependencies
+        run: python -m pip install -r integrations/native-stack-v0.1/requirements.txt
+
+      - name: Run bridge regression tests
+        run: python -m unittest tests.test_native_stack_bridge -v
+
+      - name: Validate canonical DIF record against pinned schema
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from jsonschema import FormatChecker, validators
+
+          schema = json.loads(
+              Path("_upstream/DIF/schemas/confirmed-intent.schema.json").read_text()
+          )
+          record = json.loads(
+              Path("integrations/native-stack-v0.1/dif-confirmed-intent.json").read_text()
+          )
+          validator_cls = validators.validator_for(schema)
+          validator_cls.check_schema(schema)
+          errors = list(
+              validator_cls(schema, format_checker=FormatChecker()).iter_errors(record)
+          )
+          if errors:
+              for error in errors:
+                  print(error.message)
+              raise SystemExit(1)
+          print("PASS DIF schema-only validation")
+          PY
+
+      - name: Validate canonical DRP record with native validator
+        run: |
+          python _upstream/DRP/tools/drp_validator.py \
+            integrations/native-stack-v0.1/drp-record.json \
+            --json
+
+      - name: Validate canonical TIP record with native validator
+        env:
+          PYTHONPATH: _upstream/TIP
+        run: |
+          python -m tip validate integrations/native-stack-v0.1/tip-record.tip.json
+
+      - name: Validate body binding and DI envelope projection
+        run: |
+          python scripts/validate-native-stack-bridge.py \
+            --bundle integrations/native-stack-v0.1 \
+            --pretty \
+            > native-stack-bridge-report.json
+          cat native-stack-bridge-report.json
+
+      - name: Upload native bridge report
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-stack-bridge-report
+          path: native-stack-bridge-report.json
+          if-no-files-found: error
+          retention-days: 30

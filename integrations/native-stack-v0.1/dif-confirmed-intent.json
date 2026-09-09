@@ -1,0 +1,10 @@
+{
+  "id": "dif.intent.payment-recovery.native.001",
+  "version": 1,
+  "statement": "Recover the authoritative state of one ambiguous provider-neutral payment attempt before authorizing any new financial mutation.",
+  "confirmedByHuman": true,
+  "sourceSignalIds": [
+    "signal.payment-timeout.001"
+  ],
+  "createdAt": "2026-09-09T13:30:00Z"
+}
