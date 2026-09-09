@@ -1,0 +1,92 @@
+{
+  "manifest_version": "0.1",
+  "bridge_id": "di.integration.native-stack-v0.1",
+  "description": "Opt-in integration proof for one pinned native DIF → DI → DRP → TIP artifact chain. This is not a fifth protocol and does not replace any canonical repository contract.",
+  "di_contract": {
+    "repository": "safal207/DI",
+    "base_commit": "e6dba82590f3470b1f9bfa56ca5132f60eb661b5",
+    "files": {
+      "scripts/validate-fixtures.py": {
+        "git_blob_sha": "23d52d626cd6dbda8912a87e9a5a821c88c54e52"
+      },
+      "schemas/feasibility-check.schema.json": {
+        "git_blob_sha": "ba9e38356b1942b74f2a0119080a011fc5504152"
+      },
+      "schemas/decision-transition-envelope.schema.json": {
+        "git_blob_sha": "0d62d7a8a0fbc15c34ddb8a799d29eb041bd8198"
+      }
+    }
+  },
+  "external_repositories": {
+    "dif": {
+      "repository": "safal207/DIF",
+      "commit": "a5a8d330a6308a4c7990be2a4d46211cc030d05d",
+      "schema_path": "schemas/confirmed-intent.schema.json"
+    },
+    "drp": {
+      "repository": "safal207/DRP",
+      "commit": "92e63d7d4eeb55f8eb61956da002dc8951bab1c6",
+      "schema_path": "schema/drp.schema.json",
+      "validator_path": "tools/drp_validator.py"
+    },
+    "tip": {
+      "repository": "safal207/transition-intelligence-protocol",
+      "commit": "6b272febd048cf8e218417b3c0506c7fa4fa43fa",
+      "schema_path": "schemas/tip-record.schema.json",
+      "validator_entrypoint": "tip/__main__.py",
+      "validator_args": [
+        "-m",
+        "tip",
+        "validate"
+      ]
+    }
+  },
+  "artifacts": {
+    "dif": {
+      "path": "records/confirmed-intent.json",
+      "expected_id": "dif.intent.payment-recovery.native.001",
+      "sha256": "b9f1a4721b83bb5df1f51c69c2c800fe3d92c6b476157fa912aac589ea6fa37d"
+    },
+    "di": {
+      "path": "records/di-feasibility.json",
+      "expected_id": "di.feasibility.payment-recovery.native.001",
+      "sha256": "badbf67a92a60122a6834e3e747be1458506bc15a1f81782ae648c0840b8b134"
+    },
+    "drp": {
+      "path": "records/drp-record.json",
+      "expected_id": "drp.payment-recovery.native.001",
+      "sha256": "3b08141fa607ea22acfeb939e14a0d7448f0a2f7bd6eb6066874f840d04f1c80"
+    },
+    "tip": {
+      "path": "records/tip-record.tip.json",
+      "expected_id": "tip.payment-recovery.native.001",
+      "sha256": "b1f05ca6789a3723cafcc68fa81a954457e61bf83307b50995f51b8b5abe8316"
+    },
+    "projection": {
+      "path": "projection-envelope.json",
+      "expected_id": "dti.payment-recovery.native.001",
+      "sha256": "60a83a18ef3ec186ae67d4743e4be55f6882ad2eda47db4a46fe55ef1b9f4f1c"
+    },
+    "evidence": {
+      "path": "evidence/authoritative-lookup.json",
+      "sha256": "0ac359786f525e4a41cefdfc7ecaf3cdfffc377845e5628d7d619484e9ce1655"
+    }
+  },
+  "bindings": {
+    "intent_text_rule": "exact_equality",
+    "selected_action": "Read the authoritative transaction state before any further mutation.",
+    "selected_action_status": "allowed",
+    "drp_native_status_precondition": "complete",
+    "projection_drp_status": "committed",
+    "status_relation": "not_equivalent",
+    "evidence_reference": "file:evidence/authoritative-lookup.json",
+    "logical_operation_id": "operation.payment-recovery.native.001",
+    "expected_stored_effect_count": 1,
+    "expected_duplicate_effect_count": 0
+  },
+  "non_claims": {
+    "external_authenticity": "not_proven",
+    "execution_authority": "out_of_scope",
+    "provider_endorsement": false
+  }
+}
