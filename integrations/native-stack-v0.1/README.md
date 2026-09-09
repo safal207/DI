@@ -86,14 +86,13 @@ requirements.txt
 
 ## Reproduce
 
-The GitHub workflow checks out the pinned upstream commits and runs:
+The GitHub workflow checks out the pinned upstream commits, runs DIF schema-only validation, the native DRP and TIP validators, and then runs:
 
 ```bash
 python -m pip install -r integrations/native-stack-v0.1/requirements.txt
 python -m unittest tests.test_native_stack_bridge -v
 python scripts/validate-native-stack-bridge.py \
   --bundle integrations/native-stack-v0.1 \
-  --upstream-root _upstream \
   --pretty
 ```
 
