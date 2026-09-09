@@ -1,0 +1,46 @@
+{
+  "check_id": "di.feasibility.payment-recovery.native.001",
+  "request": "Recover one ambiguous payment attempt by reading the authoritative transaction state before any further mutation.",
+  "inferred_intent": "Recover one ambiguous payment attempt by reading the authoritative transaction state before any further mutation.",
+  "capabilities": [
+    "read the authoritative transaction state of the existing logical operation",
+    "preserve the existing operation identity while assessing whether any later recovery action is needed",
+    "record a provider-neutral local observation for review"
+  ],
+  "limitations": [
+    "the bridge does not prove that an external provider event actually occurred",
+    "the bridge has no execution authority and performs no financial mutation",
+    "a local provider-neutral observation fixture is not external evidence authenticity"
+  ],
+  "constraints": [
+    "perform authoritative lookup before any retry decision",
+    "do not create a second financial effect while commit state is unresolved",
+    "use no provider credential, production state, or live payment adapter"
+  ],
+  "feasible_actions": [
+    {
+      "action": "Read the authoritative transaction state before any further mutation.",
+      "status": "allowed",
+      "conditions": [
+        "the lookup is read-only and bound to the existing logical operation"
+      ]
+    },
+    {
+      "action": "Wait for stronger terminal evidence before any further mutation.",
+      "status": "allowed",
+      "conditions": [
+        "the authoritative lookup has not yet produced a reviewable state"
+      ]
+    }
+  ],
+  "blocked_actions": [
+    {
+      "action": "Blindly retry the payment while the prior commit state is unresolved.",
+      "reason": "a second mutation could create a duplicate financial effect that the confirmed intent excludes"
+    }
+  ],
+  "unknowns": [
+    "whether a real external provider would return the same observation under a separately authorized sandbox test"
+  ],
+  "recommended_next_step": "Read the authoritative transaction state before any further mutation."
+}
