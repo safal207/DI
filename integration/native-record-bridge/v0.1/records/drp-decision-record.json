@@ -1,0 +1,24 @@
+{
+  "record_id": "drp.payment-recovery.001",
+  "timestamp": "2026-09-09T17:05:00Z",
+  "context": "DIF confirmed a one-payment recovery intent. DI found authoritative state recovery feasible and blocked blind retry while commit state is unknown.",
+  "decision": "Read authoritative transaction state for the existing payment operation before authorizing any new financial mutation.",
+  "options": [
+    "Read authoritative transaction state for the existing payment operation before authorizing any new financial mutation.",
+    "Blindly submit a new payment mutation after the timeout.",
+    "Stop and escalate to a human operator without further state recovery."
+  ],
+  "status": "complete",
+  "rationale": "Reading existing authoritative state preserves the one-effect intent and avoids treating transport ambiguity as evidence that the first mutation did not commit.",
+  "impact": 0,
+  "tags": [
+    "payment-recovery",
+    "ambiguous-commit",
+    "native-record-bridge"
+  ],
+  "metadata": {
+    "dif_intent_id": "dif.intent.payment-recovery.001",
+    "di_check_id": "di.feasibility.payment-recovery.001",
+    "selected_di_action": "Read authoritative transaction state for the existing payment operation before authorizing any new financial mutation."
+  }
+}

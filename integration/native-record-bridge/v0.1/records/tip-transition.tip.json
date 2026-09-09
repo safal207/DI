@@ -1,0 +1,89 @@
+{
+  "id": "tip.payment-recovery.001",
+  "title": "Recover ambiguous payment state without a duplicate effect",
+  "status": "reviewed",
+  "state": {
+    "summary": "A payment mutation was dispatched, its acknowledgement was lost, and authoritative commit state is unknown.",
+    "actors": [
+      "payment recovery controller",
+      "authoritative transaction store"
+    ],
+    "known_facts": [
+      "One logical payment operation identity exists.",
+      "The transport acknowledgement was lost."
+    ],
+    "constraints": [
+      "Do not create a new payment mutation while authoritative commit state is unknown."
+    ]
+  },
+  "tension": {
+    "summary": "The system must continue without guessing whether the first financial mutation committed.",
+    "kind": "ambiguity",
+    "severity": "high"
+  },
+  "cause": {
+    "cause_type": "risk",
+    "summary": "Transport ambiguity separates mutation dispatch from authoritative knowledge of the committed outcome.",
+    "supporting_signals": [
+      "drp:drp.payment-recovery.001",
+      "di:di.feasibility.payment-recovery.001"
+    ],
+    "basis": "The completed DRP decision requires authoritative state recovery before another financial mutation.",
+    "parent_cause": null,
+    "confidence": 0.9,
+    "confidence_assessment": {
+      "assessor": "native-record-bridge example",
+      "assessor_type": "mixed",
+      "method": "judgment",
+      "rationale": "The provider-neutral fixture explicitly records a lost acknowledgement and unknown commit state.",
+      "alternative_explanations": [
+        "The original mutation committed despite the lost acknowledgement.",
+        "The original mutation did not commit."
+      ],
+      "human_confirmed": true,
+      "human_confirmer": "fixture owner"
+    }
+  },
+  "transition": {
+    "from": "commit_state_unknown",
+    "to": "established_transaction_state",
+    "trigger": "authoritative transaction lookup using the existing payment operation identity",
+    "reversibility": "high",
+    "impact_scope": "bounded",
+    "feedback_latency": "immediate",
+    "expected_consequence": "Recover the existing transaction outcome without creating a second payment effect.",
+    "uncertainty": "low"
+  },
+  "cooperation": {
+    "participants": [
+      {
+        "name": "human intent owner",
+        "goal": "Preserve one intended payment effect.",
+        "risk": "A blind retry could create a duplicate charge."
+      },
+      {
+        "name": "payment recovery controller",
+        "goal": "Continue only from authoritative state evidence.",
+        "risk": "Guessing commit state could authorize the wrong transition."
+      }
+    ],
+    "shared_upside": "The workflow continues from evidence while preserving the original one-payment intent.",
+    "defection_risk": "low",
+    "stability": "stable",
+    "recommendation": "commit"
+  },
+  "action": {
+    "summary": "Read authoritative transaction state for the existing payment operation before authorizing any new financial mutation.",
+    "review_after": "after authoritative lookup returns a terminal or still-unknown result",
+    "owner": "payment recovery controller"
+  },
+  "review": {
+    "summary": "Authoritative lookup found the original operation committed; no second payment mutation was issued.",
+    "actual_consequence": "One existing payment effect was accepted and a duplicate mutation was avoided.",
+    "evidence": [
+      "evidence://provider-neutral/authoritative-lookup/committed",
+      "evidence://provider-neutral/effect-count/one"
+    ],
+    "next_state": "SUCCESS_CONFIRMED"
+  }
+}
