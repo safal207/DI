@@ -1,0 +1,38 @@
+{
+  "check_id": "di.feasibility.payment-recovery.native.001",
+  "request": "Determine the safe next step after a provider-neutral payment request lost its acknowledgement and the local commit state is unknown.",
+  "inferred_intent": "Recover the authoritative state of one ambiguous provider-neutral payment attempt before authorizing any new financial mutation.",
+  "capabilities": [
+    "Read authoritative transaction state using an existing operation reference.",
+    "Compare observed transaction state with the original logical operation."
+  ],
+  "limitations": [
+    "A lost acknowledgement does not prove that the payment was not committed.",
+    "A new financial mutation is unsafe until authoritative state recovery completes."
+  ],
+  "constraints": [
+    "Preserve the original logical operation identity.",
+    "Do not create a second payment effect while commit state is unresolved.",
+    "Use only provider-neutral deterministic evidence in this example."
+  ],
+  "feasible_actions": [
+    {
+      "action": "recover authoritative transaction state before any new mutation",
+      "status": "allowed_with_constraints",
+      "conditions": [
+        "Use the existing logical operation reference.",
+        "Treat the lookup result as evidence, not as permission for an unrelated new payment."
+      ]
+    }
+  ],
+  "blocked_actions": [
+    {
+      "action": "issue a new payment mutation before resolving the prior commit state",
+      "reason": "The prior effect may already exist, so a new mutation can create a duplicate financial effect."
+    }
+  ],
+  "unknowns": [
+    "Whether the original payment effect committed before the acknowledgement was lost."
+  ],
+  "recommended_next_step": "Recover authoritative transaction state and stop if the existing effect is confirmed."
+}
