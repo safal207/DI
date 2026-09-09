@@ -1,0 +1,19 @@
+{
+  "record_id": "drp.payment-recovery.native.001",
+  "timestamp": "2026-09-09T12:05:00+00:00",
+  "context": "One payment attempt has an ambiguous commit state. The confirmed intent is to recover state without creating a second financial effect.",
+  "decision": "Read the authoritative transaction state before any further mutation.",
+  "options": [
+    "Read the authoritative transaction state before any further mutation.",
+    "Wait for stronger terminal evidence before any further mutation.",
+    "Blindly retry the payment while the prior commit state is unresolved."
+  ],
+  "status": "complete",
+  "rationale": "A read-only authoritative lookup is an allowed DI path and establishes the current transaction state before any later mutation decision. A blind retry is excluded because the prior commit state is unresolved.",
+  "impact": 0,
+  "tags": [
+    "payment-recovery",
+    "provider-neutral",
+    "read-before-retry"
+  ]
+}
