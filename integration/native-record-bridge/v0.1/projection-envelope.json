@@ -1,0 +1,50 @@
+{
+  "envelope_version": "0.1",
+  "envelope_id": "dti.native-record-bridge.payment-recovery.001",
+  "dif": {
+    "intent_id": "dif.intent.payment-recovery.001",
+    "status": "confirmed",
+    "summary": "Recover the authoritative outcome of one ambiguous payment operation without creating a second financial effect.",
+    "human_confirmed": true
+  },
+  "di": {
+    "feasibility_id": "di.feasibility.payment-recovery.001",
+    "intent_id": "dif.intent.payment-recovery.001",
+    "status": "conditional",
+    "allowed_paths": [
+      "Read authoritative transaction state for the existing payment operation before authorizing any new financial mutation.",
+      "Retry the existing payment mutation using the original operation/effect identity."
+    ],
+    "blocked_paths": [
+      "Blindly submit a new payment mutation after a timeout."
+    ],
+    "constraints": [
+      "Do not create a new payment mutation while authoritative commit state is unknown.",
+      "Only authoritative state evidence may justify any subsequent financial mutation.",
+      "Any justified retry must preserve the original operation/effect identity."
+    ]
+  },
+  "drp": {
+    "record_id": "drp.payment-recovery.001",
+    "feasibility_id": "di.feasibility.payment-recovery.001",
+    "decision_summary": "Read authoritative transaction state for the existing payment operation before authorizing any new financial mutation.",
+    "status": "committed"
+  },
+  "tip": {
+    "transition_id": "tip.payment-recovery.001",
+    "decision_record_id": "drp.payment-recovery.001",
+    "starting_state": "commit_state_unknown",
+    "target_state": "established_transaction_state",
+    "action_summary": "Read authoritative transaction state for the existing payment operation before authorizing any new financial mutation.",
+    "status": "reviewed"
+  },
+  "review": {
+    "transition_id": "tip.payment-recovery.001",
+    "status": "reviewed",
+    "evidence_references": [
+      "evidence://provider-neutral/authoritative-lookup/committed",
+      "evidence://provider-neutral/effect-count/one"
+    ],
+    "next_state": "SUCCESS_CONFIRMED"
+  }
+}

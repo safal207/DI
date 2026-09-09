@@ -1,0 +1,44 @@
+{
+  "check_id": "di.feasibility.payment-recovery.001",
+  "request": "Recover the authoritative outcome of one ambiguous payment operation without creating a second financial effect.",
+  "inferred_intent": "Recover the authoritative outcome of one ambiguous payment operation without creating a second financial effect.",
+  "capabilities": [
+    "Read authoritative transaction state using the existing payment operation identity.",
+    "Preserve the original operation/effect identity if a retry is later justified."
+  ],
+  "limitations": [
+    "A lost transport acknowledgement does not prove whether the payment mutation committed."
+  ],
+  "constraints": [
+    "Do not create a new payment mutation while authoritative commit state is unknown.",
+    "Only authoritative state evidence may justify any subsequent financial mutation.",
+    "Any justified retry must preserve the original operation/effect identity."
+  ],
+  "feasible_actions": [
+    {
+      "action": "Read authoritative transaction state for the existing payment operation before authorizing any new financial mutation.",
+      "status": "allowed",
+      "conditions": [
+        "Use the existing payment operation identity."
+      ]
+    },
+    {
+      "action": "Retry the existing payment mutation using the original operation/effect identity.",
+      "status": "allowed_with_constraints",
+      "conditions": [
+        "Authoritative recovery proves that no committed effect exists.",
+        "The original operation/effect identity is preserved."
+      ]
+    }
+  ],
+  "blocked_actions": [
+    {
+      "action": "Blindly submit a new payment mutation after a timeout.",
+      "reason": "The original commit state is unknown, so a new mutation could create a duplicate financial effect."
+    }
+  ],
+  "unknowns": [
+    "Authoritative commit state remains unknown until lookup evidence is observed."
+  ],
+  "recommended_next_step": "Read authoritative transaction state for the existing payment operation before authorizing any new financial mutation."
+}

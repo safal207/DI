@@ -1,0 +1,95 @@
+{
+  "manifest_version": "0.1",
+  "bridge_id": "native-record-bridge.payment-recovery.001",
+  "bridge_kind": "opt-in-integration-proof",
+  "host": {
+    "repository": "safal207/DI",
+    "base_commit_sha": "e6dba82590f3470b1f9bfa56ca5132f60eb661b5",
+    "base_tree_sha": "5aeb8fc48b974cf82f1e012ac9316974d4a8ff55",
+    "schema_path": "schemas/feasibility-check.schema.json",
+    "projection_schema_path": "schemas/decision-transition-envelope.schema.json",
+    "validator_path": "scripts/validate-fixtures.py",
+    "validator_mode": "native-local-schema-and-envelope-semantics"
+  },
+  "upstreams": {
+    "dif": {
+      "repository": "safal207/DIF",
+      "checkout_dir": "DIF",
+      "commit_sha": "a5a8d330a6308a4c7990be2a4d46211cc030d05d",
+      "tree_sha": "1d0191031d30aaebc55b472841cb3798d7b86a72",
+      "schema_path": "schemas/confirmed-intent.schema.json",
+      "validator_mode": "draft2020-12-schema-with-format-checker"
+    },
+    "drp": {
+      "repository": "safal207/DRP",
+      "checkout_dir": "DRP",
+      "commit_sha": "92e63d7d4eeb55f8eb61956da002dc8951bab1c6",
+      "tree_sha": "3450f4399719bc1a0c98422b0af7f21d7ea53eef",
+      "schema_path": "schema/drp.schema.json",
+      "validator_path": "tools/drp_validator.py",
+      "validator_mode": "native-reference-validator"
+    },
+    "tip": {
+      "repository": "safal207/transition-intelligence-protocol",
+      "checkout_dir": "TIP",
+      "commit_sha": "6b272febd048cf8e218417b3c0506c7fa4fa43fa",
+      "tree_sha": "98880be1303fdb4772226581fa5a7952a7658c25",
+      "schema_path": "schemas/tip-record.schema.json",
+      "validator_module": "tip",
+      "validator_mode": "native-reference-cli"
+    }
+  },
+  "artifacts": {
+    "dif": {
+      "path": "records/dif-confirmed-intent.json",
+      "sha256": "b2a45720482b90a05ca7e4dc9ac4d1fc00b22fb3e142c224c27b0e4e3ba06476",
+      "identity_field": "id"
+    },
+    "di": {
+      "path": "records/di-feasibility-check.json",
+      "sha256": "72e6372754e7455bcc87ba448d8d5367bcc3358263f66fd645f6c4eafd3f463d",
+      "identity_field": "check_id"
+    },
+    "drp": {
+      "path": "records/drp-decision-record.json",
+      "sha256": "255a234f4eba51578c6157e5fb3d4430190d1fa73b169e5a23ff61cfc3386b91",
+      "identity_field": "record_id"
+    },
+    "tip": {
+      "path": "records/tip-transition.tip.json",
+      "sha256": "672891cf9bb02a0dbd5b4d746ed6aeeeb1a6dd11b2c558204a787360cc56cea8",
+      "identity_field": "id"
+    },
+    "projection": {
+      "path": "projection-envelope.json",
+      "sha256": "bc39eead70ad73810dd9707961d37e6ae239b344f23338ba8470cd36c766d8c9"
+    }
+  },
+  "expected": {
+    "starting_state": "commit_state_unknown",
+    "target_state": "established_transaction_state",
+    "next_state": "SUCCESS_CONFIRMED"
+  },
+  "status_mapping": {
+    "drp_to_projection": {
+      "source_status": "complete",
+      "projected_status": "committed",
+      "scope": "native-record-bridge.payment-recovery.001-only",
+      "preconditions": [
+        "The raw DRP body hash matches this manifest.",
+        "The DRP record is not superseded.",
+        "The DRP decision exactly equals DI recommended_next_step.",
+        "The DRP metadata binds the exact DIF intent id and DI check id.",
+        "The TIP action summary exactly equals the DRP decision."
+      ]
+    }
+  },
+  "non_claims": [
+    "This fixture does not prove evidence authenticity.",
+    "This fixture does not prove actual human identity or authenticated consent.",
+    "This fixture does not grant or prove execution authority.",
+    "This fixture does not prove external provider behavior or exactly-once execution.",
+    "This fixture does not prove causal correctness.",
+    "This bridge is not a fifth protocol and does not make DIF, DI, DRP, or TIP members of one protocol."
+  ]
+}

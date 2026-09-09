@@ -1,0 +1,10 @@
+{
+  "id": "dif.intent.payment-recovery.001",
+  "version": 1,
+  "statement": "Recover the authoritative outcome of one ambiguous payment operation without creating a second financial effect.",
+  "confirmedByHuman": true,
+  "sourceSignalIds": [
+    "signal.payment-timeout.001"
+  ],
+  "createdAt": "2026-09-09T17:00:00Z"
+}
