@@ -1,0 +1,49 @@
+{
+  "envelope_version": "0.1",
+  "envelope_id": "dti.native-payment-recovery.001",
+  "dif": {
+    "intent_id": "dif.intent.payment-recovery.native.001",
+    "status": "confirmed",
+    "summary": "Recover the authoritative state of one ambiguous provider-neutral payment attempt before authorizing any new financial mutation.",
+    "human_confirmed": true
+  },
+  "di": {
+    "feasibility_id": "di.feasibility.payment-recovery.native.001",
+    "intent_id": "dif.intent.payment-recovery.native.001",
+    "status": "conditional",
+    "allowed_paths": [
+      "recover authoritative transaction state before any new mutation"
+    ],
+    "blocked_paths": [
+      "issue a new payment mutation before resolving the prior commit state"
+    ],
+    "constraints": [
+      "Preserve the original logical operation identity.",
+      "Do not create a second payment effect while commit state is unresolved.",
+      "Use only provider-neutral deterministic evidence in this example."
+    ]
+  },
+  "drp": {
+    "record_id": "drp.payment-recovery.native.001",
+    "feasibility_id": "di.feasibility.payment-recovery.native.001",
+    "decision_summary": "Recover the authoritative transaction state for the existing logical operation before any new financial mutation; if an existing committed effect is confirmed, accept it and do not pay again.",
+    "status": "committed"
+  },
+  "tip": {
+    "transition_id": "tip.payment-recovery.native.001",
+    "decision_record_id": "drp.payment-recovery.native.001",
+    "starting_state": "commit_state_unknown",
+    "target_state": "established_transaction_state",
+    "action_summary": "Read the authoritative state of the existing logical operation; do not create a new payment effect.",
+    "status": "reviewed"
+  },
+  "review": {
+    "transition_id": "tip.payment-recovery.native.001",
+    "status": "reviewed",
+    "evidence_references": [
+      "evidence://native-stack/payment-recovery/authoritative-read",
+      "evidence://native-stack/payment-recovery/single-effect"
+    ],
+    "next_state": "SUCCESS_CONFIRMED"
+  }
+}
