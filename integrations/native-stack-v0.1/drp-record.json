@@ -1,0 +1,26 @@
+{
+  "record_id": "drp.payment-recovery.native.001",
+  "timestamp": "2026-09-09T13:31:00Z",
+  "context": "DI found a bounded read-only recovery path and blocked a new payment mutation while the prior commit state remained unknown.",
+  "decision": "Recover the authoritative transaction state for the existing logical operation before any new financial mutation; if an existing committed effect is confirmed, accept it and do not pay again.",
+  "options": [
+    "Recover the authoritative transaction state for the existing logical operation.",
+    "Blindly retry the payment as a new mutation.",
+    "Stop permanently without resolving the existing transaction state."
+  ],
+  "status": "complete",
+  "rationale": "A lost acknowledgement is ambiguous. Read-before-write recovery preserves the existing operation identity and avoids creating a second effect.",
+  "impact": 0,
+  "tags": [
+    "payment-recovery",
+    "ambiguous-commit",
+    "native-stack-bridge"
+  ],
+  "metadata": {
+    "native_stack_bridge_v0_1": {
+      "dif_intent_id": "dif.intent.payment-recovery.native.001",
+      "di_check_id": "di.feasibility.payment-recovery.native.001",
+      "selected_path": "recover authoritative transaction state before any new mutation"
+    }
+  }
+}
