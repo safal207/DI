@@ -1,0 +1,10 @@
+{
+  "logical_operation_id": "operation.payment-recovery.native.001",
+  "observation_type": "authoritative_lookup_fixture",
+  "observed_state": "TRANSACTION_STATE_ESTABLISHED",
+  "stored_effect_count": 1,
+  "duplicate_effect_count": 0,
+  "observed_at": "2026-09-09T12:10:00Z",
+  "source_kind": "local_provider_neutral_fixture",
+  "external_provider_used": false
+}
