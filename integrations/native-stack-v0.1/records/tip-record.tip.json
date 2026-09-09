@@ -1,0 +1,95 @@
+{
+  "id": "tip.payment-recovery.native.001",
+  "title": "Establish payment state before any retry decision",
+  "status": "reviewed",
+  "state": {
+    "summary": "COMMIT_STATE_UNKNOWN",
+    "actors": [
+      "intent owner",
+      "recovery reviewer",
+      "authoritative transaction state reader"
+    ],
+    "known_facts": [
+      "the logical operation already exists",
+      "the local commit state is unresolved before the lookup",
+      "the selected action is read-only"
+    ],
+    "constraints": [
+      "do not authorize another financial mutation from an unknown commit state",
+      "preserve the original logical operation identity"
+    ]
+  },
+  "tension": {
+    "summary": "A retry may create a duplicate effect, while doing nothing leaves the commit state ambiguous.",
+    "kind": "risk",
+    "severity": "high"
+  },
+  "cause": {
+    "cause_type": "risk",
+    "summary": "The acknowledgement outcome does not establish the authoritative commit state.",
+    "supporting_signals": [
+      "local commit state is ambiguous",
+      "blind retry is blocked by the DI feasibility assessment"
+    ],
+    "basis": "Provider-neutral local fixture used only to exercise the integration contract.",
+    "parent_cause": null,
+    "confidence": 0.9,
+    "confidence_assessment": {
+      "assessor": "bridge test author",
+      "assessor_type": "human",
+      "method": "judgment",
+      "rationale": "The transition is limited to a read-only lookup and the bridge separately marks external authenticity and execution authority as out of scope.",
+      "alternative_explanations": [
+        "a real provider could expose a different state or evidence surface"
+      ],
+      "human_confirmed": true,
+      "human_confirmer": "intent owner"
+    }
+  },
+  "transition": {
+    "from": "COMMIT_STATE_UNKNOWN",
+    "to": "TRANSACTION_STATE_ESTABLISHED",
+    "trigger": "Read the authoritative transaction state before any further mutation.",
+    "reversibility": "high",
+    "impact_scope": "local",
+    "feedback_latency": "immediate",
+    "expected_consequence": "The existing operation receives a reviewable state observation without creating another financial mutation.",
+    "uncertainty": "low"
+  },
+  "cooperation": {
+    "participants": [
+      {
+        "name": "intent owner",
+        "goal": "avoid a duplicate financial effect",
+        "risk": "a blind retry"
+      },
+      {
+        "name": "recovery reviewer",
+        "goal": "establish state before mutation",
+        "risk": "accepting an ungrounded outcome"
+      },
+      {
+        "name": "state reader",
+        "goal": "return one observation for the existing operation",
+        "risk": "stale or unavailable state"
+      }
+    ],
+    "shared_upside": "The next decision starts from an observed state instead of an assumed failure.",
+    "defection_risk": "low",
+    "stability": "stable",
+    "recommendation": "commit"
+  },
+  "action": {
+    "summary": "Read the authoritative transaction state before any further mutation.",
+    "review_after": "the local authoritative-lookup fixture is inspected",
+    "owner": "recovery reviewer"
+  },
+  "review": {
+    "summary": "The provider-neutral local observation records one existing effect, zero duplicate effects, and a concrete transaction-state result.",
+    "actual_consequence": "A local fixture records TRANSACTION_STATE_ESTABLISHED; external authenticity is not proven.",
+    "evidence": [
+      "file:evidence/authoritative-lookup.json"
+    ],
+    "next_state": "TRANSACTION_STATE_ESTABLISHED"
+  }
+}
