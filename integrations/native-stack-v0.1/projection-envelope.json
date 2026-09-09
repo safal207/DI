@@ -1,0 +1,49 @@
+{
+  "envelope_version": "0.1",
+  "envelope_id": "dti.payment-recovery.native.001",
+  "dif": {
+    "intent_id": "dif.intent.payment-recovery.native.001",
+    "status": "confirmed",
+    "summary": "Recover one ambiguous payment attempt by reading the authoritative transaction state before any further mutation.",
+    "human_confirmed": true
+  },
+  "di": {
+    "feasibility_id": "di.feasibility.payment-recovery.native.001",
+    "intent_id": "dif.intent.payment-recovery.native.001",
+    "status": "feasible",
+    "allowed_paths": [
+      "Read the authoritative transaction state before any further mutation.",
+      "Wait for stronger terminal evidence before any further mutation."
+    ],
+    "blocked_paths": [
+      "Blindly retry the payment while the prior commit state is unresolved."
+    ],
+    "constraints": [
+      "perform authoritative lookup before any retry decision",
+      "do not create a second financial effect while commit state is unresolved",
+      "use no provider credential, production state, or live payment adapter"
+    ]
+  },
+  "drp": {
+    "record_id": "drp.payment-recovery.native.001",
+    "feasibility_id": "di.feasibility.payment-recovery.native.001",
+    "decision_summary": "Read the authoritative transaction state before any further mutation.",
+    "status": "committed"
+  },
+  "tip": {
+    "transition_id": "tip.payment-recovery.native.001",
+    "decision_record_id": "drp.payment-recovery.native.001",
+    "starting_state": "COMMIT_STATE_UNKNOWN",
+    "target_state": "TRANSACTION_STATE_ESTABLISHED",
+    "action_summary": "Read the authoritative transaction state before any further mutation.",
+    "status": "reviewed"
+  },
+  "review": {
+    "transition_id": "tip.payment-recovery.native.001",
+    "status": "reviewed",
+    "evidence_references": [
+      "file:evidence/authoritative-lookup.json"
+    ],
+    "next_state": "TRANSACTION_STATE_ESTABLISHED"
+  }
+}
