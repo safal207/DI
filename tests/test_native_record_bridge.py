@@ -1,4 +1,9 @@
-"""Adversarial regressions for the pinned native-record bridge."""
+"""Adversarial regressions for the pinned native-record bridge.
+
+The repository-wide DI suite intentionally has no cross-repository checkout or
+jsonschema dependency. These tests therefore activate only when the dedicated
+native-bridge workflow supplies the three pinned repository roots.
+"""
 
 from __future__ import annotations
 
@@ -14,16 +19,34 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "scripts" / "validate_native_record_bridge.py"
-_spec = importlib.util.spec_from_file_location("native_bridge", SCRIPT)
-if _spec is None or _spec.loader is None:
-    raise RuntimeError(f"cannot load {SCRIPT}")
-bridge = importlib.util.module_from_spec(_spec)
-_spec.loader.exec_module(bridge)
+bridge = None
 
 
 class NativeRecordBridgeTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
+        required = ("DIF_ROOT", "DRP_ROOT", "TIP_ROOT")
+        missing = [name for name in required if not os.environ.get(name)]
+        if missing:
+            raise unittest.SkipTest(
+                "native bridge roots are provided only by the dedicated workflow: "
+                + ", ".join(missing)
+            )
+        try:
+            import jsonschema  # noqa: F401
+        except ImportError as exc:
+            raise unittest.SkipTest(
+                "jsonschema is an opt-in dependency installed by the native bridge workflow"
+            ) from exc
+
+        global bridge
+        spec = importlib.util.spec_from_file_location("native_bridge", SCRIPT)
+        if spec is None or spec.loader is None:
+            raise RuntimeError(f"cannot load {SCRIPT}")
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        bridge = module
+
         cls.dif_root = Path(os.environ["DIF_ROOT"]).resolve()
         cls.drp_root = Path(os.environ["DRP_ROOT"]).resolve()
         cls.tip_root = Path(os.environ["TIP_ROOT"]).resolve()
