@@ -151,6 +151,18 @@ class NativeRecordBridgeTests(unittest.TestCase):
         self.update_digest(case, "drp")
         self.assert_bridge_error("reference_mismatch", case)
 
+    def test_tip_cannot_rephrase_selected_di_conditions(self) -> None:
+        temp, case = self.make_case()
+        self.addCleanup(temp.cleanup)
+        path = case / "records" / "tip-record.json"
+        record = self.read_json(path)
+        record["state"]["constraints"][1] = (
+            "Do not create a fresh payment mutation while the prior commit state is unknown"
+        )
+        self.write_json(path, record)
+        self.update_digest(case, "tip")
+        self.assert_bridge_error("reference_mismatch", case)
+
     def test_unobserved_tip_next_state_cannot_close_bridge(self) -> None:
         temp, case = self.make_case()
         self.addCleanup(temp.cleanup)

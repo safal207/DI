@@ -227,7 +227,15 @@ def validate_consistency(
         raise BridgeError("reference_mismatch", "TIP action does not equal the canonical DRP decision")
 
     state = tip.get("state")
-    facts = state.get("known_facts", []) if isinstance(state, dict) else []
+    if not isinstance(state, dict):
+        raise BridgeError("reference_mismatch", "TIP state is required for bridge continuity")
+    tip_constraints = state.get("constraints", [])
+    if tip_constraints != expected_conditions:
+        raise BridgeError(
+            "reference_mismatch",
+            "TIP state constraints do not preserve the exact selected DI conditions",
+        )
+    facts = state.get("known_facts", [])
     if f"Confirmed intent: {dif['id']}" not in facts:
         raise BridgeError("reference_mismatch", "TIP does not cite the supplied DIF intent")
     if f"Decision record: {drp['record_id']}" not in facts:

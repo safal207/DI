@@ -56,7 +56,7 @@
     },
     "tip": {
       "path": "records/tip-record.json",
-      "sha256": "5198e26fa761ee9d5c2529cf08f0877c5eaf0807075cee5ea1970aea416a0786"
+      "sha256": "f8b92a02935af5054d601c169d64365586bcd3df8e7564fd79e1ed13e8362cff"
     }
   },
   "links": {
@@ -68,7 +68,7 @@
   "mapping_policy": {
     "dif_to_di": "DI request must exactly equal the confirmed DIF statement.",
     "di_to_drp": "DRP status must be complete; DRP decision must exactly equal DI recommended_next_step and a DI feasible action. If constrained, DRP metadata must preserve the exact DI conditions.",
-    "drp_to_tip": "TIP action must exactly equal the DRP decision and TIP known_facts must cite both the confirmed intent ID and decision record ID.",
+    "drp_to_tip": "TIP action must exactly equal the DRP decision, TIP state constraints must preserve the exact selected DI conditions, and TIP known_facts must cite both the confirmed intent ID and decision record ID.",
     "tip_to_review": "TIP must be reviewed with non-empty evidence and a concrete observed next_state."
   },
   "report_boundaries": {

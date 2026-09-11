@@ -50,7 +50,7 @@ For this provider-neutral case, a DRP `complete` record is accepted only when:
 5. constrained conditions are copied exactly into DRP metadata;
 6. DRP metadata binds the exact DIF intent ID and DI check ID.
 
-The TIP action must then exactly equal the DRP decision and cite the supplied intent and decision record IDs.
+The TIP action must then exactly equal the DRP decision, cite the supplied intent and decision record IDs, and preserve the selected DI conditions **verbatim** in `state.constraints`. This prevents a later stage from weakening or rephrasing a constraint while keeping the same identifiers.
 
 ## Exact-body binding
 
@@ -104,10 +104,11 @@ python -m unittest tests.test_native_record_bridge -v
 The tests require rejection of:
 
 - a changed body with an unchanged ID and stale digest;
-- false DIF confirmation;
+- false or missing DIF confirmation;
 - a missing original record;
 - a DRP status that cannot be mechanically mapped from DI permission;
 - mismatched cross-record references;
+- a TIP record that rephrases or drops selected DI constraints;
 - an unobserved TIP next state;
 - a repository-version mismatch.
 

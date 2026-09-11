@@ -15,7 +15,7 @@
     ],
     "constraints": [
       "Preserve the original operation identity",
-      "Do not create a fresh payment mutation while the prior commit state is unknown"
+      "Do not create a new payment mutation while the prior commit state is unknown"
     ]
   },
   "tension": {
