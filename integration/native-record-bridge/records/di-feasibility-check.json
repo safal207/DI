@@ -1,0 +1,36 @@
+{
+  "check_id": "di.payment-recovery.001",
+  "request": "Recover the authoritative status of the existing payment before permitting any new payment mutation.",
+  "inferred_intent": "Determine what can be done safely after a payment acknowledgement is lost without assuming that the payment failed.",
+  "capabilities": [
+    "Read authoritative payment status using the original operation identity",
+    "Preserve the original operation identity across recovery"
+  ],
+  "limitations": [
+    "A missing acknowledgement does not prove that the payment failed",
+    "This provider-neutral case does not authenticate external provider evidence"
+  ],
+  "constraints": [
+    "Do not create a new payment mutation until authoritative status is recovered"
+  ],
+  "feasible_actions": [
+    {
+      "action": "Recover authoritative payment status using the original operation identity before any new payment mutation.",
+      "status": "allowed_with_constraints",
+      "conditions": [
+        "Preserve the original operation identity",
+        "Do not create a new payment mutation while the prior commit state is unknown"
+      ]
+    }
+  ],
+  "blocked_actions": [
+    {
+      "action": "Create a fresh payment mutation while the prior commit state is unknown",
+      "reason": "It could create a duplicate financial effect if the first mutation already committed."
+    }
+  ],
+  "unknowns": [
+    "The current authoritative payment status has not yet been observed"
+  ],
+  "recommended_next_step": "Recover authoritative payment status using the original operation identity before any new payment mutation."
+}

@@ -1,0 +1,87 @@
+{
+  "bridge_version": "0.1",
+  "case_id": "provider-neutral-payment-recovery-001",
+  "description": "Provider-neutral recovery of an ambiguous payment commit without issuing a second mutation.",
+  "repositories": {
+    "dif": {
+      "repository": "safal207/DIF",
+      "commit": "a5a8d330a6308a4c7990be2a4d46211cc030d05d",
+      "pin_mode": "exact",
+      "schema_path": "schemas/confirmed-intent.schema.json",
+      "schema_blob_sha": "47a981dff358705287c4a1b94be7bb840206e2c5",
+      "validation_mode": "schema_only",
+      "validation_note": "DIF ConfirmedIntent is validated against its canonical Draft 2020-12 schema with format checking."
+    },
+    "di": {
+      "repository": "safal207/DI",
+      "commit": "e6dba82590f3470b1f9bfa56ca5132f60eb661b5",
+      "pin_mode": "ancestor",
+      "schema_path": "schemas/feasibility-check.schema.json",
+      "schema_blob_sha": "ba9e38356b1942b74f2a0119080a011fc5504152",
+      "validation_mode": "schema_only",
+      "validation_note": "The feasibility artifact is schema-validated; this bridge does not pretend that schema validation is execution authority."
+    },
+    "drp": {
+      "repository": "safal207/DRP",
+      "commit": "92e63d7d4eeb55f8eb61956da002dc8951bab1c6",
+      "pin_mode": "exact",
+      "schema_path": "schema/drp.schema.json",
+      "schema_blob_sha": "2e76528a7f042cc0bbff365a4d2b6bda104a01b1",
+      "protocol_version": "0.1.0",
+      "validation_mode": "native_cli",
+      "validator": "scripts/drp-validate"
+    },
+    "tip": {
+      "repository": "safal207/transition-intelligence-protocol",
+      "commit": "6b272febd048cf8e218417b3c0506c7fa4fa43fa",
+      "pin_mode": "exact",
+      "schema_path": "schemas/tip-record.schema.json",
+      "schema_blob_sha": "8896dd68bbf4724cb56bfec959215a8bf8696ba5",
+      "validation_mode": "native_cli",
+      "validator": "python -m tip validate"
+    }
+  },
+  "records": {
+    "dif": {
+      "path": "records/dif-confirmed-intent.json",
+      "sha256": "c25a6894022fc1434baca24843334e91cc94b8e7d3893bc1e2ae61cfb15cab28"
+    },
+    "di": {
+      "path": "records/di-feasibility-check.json",
+      "sha256": "e5001ad10ed6b3ccd2101fec770cbbec76b18b3b2e77278035837c27bf5371d5"
+    },
+    "drp": {
+      "path": "records/drp-record.json",
+      "sha256": "dbc169369816b9a38b880a8d664679ac47fe8daf488f7192216f58ccb9c479f9"
+    },
+    "tip": {
+      "path": "records/tip-record.json",
+      "sha256": "5198e26fa761ee9d5c2529cf08f0877c5eaf0807075cee5ea1970aea416a0786"
+    }
+  },
+  "links": {
+    "dif_intent_id": "intent.payment-recovery.001",
+    "di_check_id": "di.payment-recovery.001",
+    "drp_record_id": "drp.payment-recovery.001",
+    "tip_record_id": "tip.payment-recovery.001"
+  },
+  "mapping_policy": {
+    "dif_to_di": "DI request must exactly equal the confirmed DIF statement.",
+    "di_to_drp": "DRP status must be complete; DRP decision must exactly equal DI recommended_next_step and a DI feasible action. If constrained, DRP metadata must preserve the exact DI conditions.",
+    "drp_to_tip": "TIP action must exactly equal the DRP decision and TIP known_facts must cite both the confirmed intent ID and decision record ID.",
+    "tip_to_review": "TIP must be reviewed with non-empty evidence and a concrete observed next_state."
+  },
+  "report_boundaries": {
+    "record_validity": "Evaluated using the stated native/schema validators.",
+    "cross_record_consistency": "Evaluated by this integration bridge.",
+    "evidence_authenticity": "Not evaluated. Evidence strings are not independently authenticated by this bridge.",
+    "execution_authority": "Not granted. A valid bridge does not authorize a live payment or provider call."
+  },
+  "non_claims": [
+    "This bridge is not a fifth protocol.",
+    "A valid bridge does not prove production safety or external exactly-once behavior.",
+    "Schema-valid confirmation does not authenticate a human identity or consent ceremony.",
+    "Evidence references are not proof of evidence authenticity.",
+    "No external provider is implied to use or endorse DIF, DI, DRP, TIP, or this bridge."
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "id": "intent.payment-recovery.001",
+  "version": 1,
+  "statement": "Recover the authoritative status of the existing payment before permitting any new payment mutation.",
+  "confirmedByHuman": true,
+  "sourceSignalIds": [
+    "signal.payment-timeout.001"
+  ],
+  "sourceCorrectionIds": [
+    "correction.no-blind-retry.001"
+  ],
+  "createdAt": "2026-09-11T05:00:00Z"
+}

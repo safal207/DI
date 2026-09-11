@@ -1,0 +1,29 @@
+{
+  "record_id": "drp.payment-recovery.001",
+  "timestamp": "2026-09-11T05:05:00Z",
+  "context": "A payment acknowledgement was lost. The confirmed intent requires safe recovery, and DI permits authoritative lookup while blocking a fresh payment mutation until the prior commit state is resolved.",
+  "decision": "Recover authoritative payment status using the original operation identity before any new payment mutation.",
+  "options": [
+    "Recover authoritative payment status using the original operation identity before any new payment mutation.",
+    "Wait for manual investigation without performing the authoritative lookup",
+    "Create a fresh payment mutation immediately"
+  ],
+  "rationale": "The lookup preserves the original operation identity and reduces ambiguity without creating another financial effect. A fresh mutation is blocked while prior commit state is unknown.",
+  "impact": 1,
+  "status": "complete",
+  "tags": [
+    "payment-recovery",
+    "idempotency",
+    "provider-neutral",
+    "native-record-bridge"
+  ],
+  "metadata": {
+    "source_dif_intent_id": "intent.payment-recovery.001",
+    "source_di_check_id": "di.payment-recovery.001",
+    "di_conditions": [
+      "Preserve the original operation identity",
+      "Do not create a new payment mutation while the prior commit state is unknown"
+    ],
+    "bridge_case_id": "provider-neutral-payment-recovery-001"
+  }
+}

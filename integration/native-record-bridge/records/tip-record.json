@@ -1,0 +1,91 @@
+{
+  "id": "tip.payment-recovery.001",
+  "title": "Recover authoritative payment status before any new mutation",
+  "status": "reviewed",
+  "state": {
+    "summary": "The payment acknowledgement was lost and the authoritative commit outcome is initially unknown.",
+    "actors": [
+      "requesting-system",
+      "payment-state-source"
+    ],
+    "known_facts": [
+      "Confirmed intent: intent.payment-recovery.001",
+      "Decision record: drp.payment-recovery.001",
+      "No fresh payment mutation is permitted while the prior commit state is unknown."
+    ],
+    "constraints": [
+      "Preserve the original operation identity",
+      "Do not create a fresh payment mutation while the prior commit state is unknown"
+    ]
+  },
+  "tension": {
+    "summary": "A blind retry could create a second financial effect if the first mutation already committed.",
+    "kind": "risk",
+    "severity": "high"
+  },
+  "cause": {
+    "cause_type": "risk",
+    "summary": "Transport acknowledgement loss leaves the commit outcome ambiguous.",
+    "supporting_signals": [
+      "The payment acknowledgement was not received",
+      "Decision record: drp.payment-recovery.001"
+    ],
+    "basis": "Provider-neutral failure model: a commit and its transport acknowledgement can diverge.",
+    "parent_cause": null,
+    "confidence": 0.9,
+    "confidence_assessment": {
+      "assessor": "integration-case-author",
+      "assessor_type": "human",
+      "method": "judgment",
+      "rationale": "The case deliberately models a lost acknowledgement after a possible commit; the duplicate-effect risk mechanism is explicit in the scenario.",
+      "alternative_explanations": [
+        "The payment may not have committed",
+        "The payment may have committed but the response was lost"
+      ],
+      "human_confirmed": true,
+      "human_confirmer": "integration-case-author"
+    }
+  },
+  "transition": {
+    "from": "commit_state_unknown",
+    "to": "payment_state_recovered",
+    "trigger": "Authoritative lookup using the original operation identity",
+    "reversibility": "high",
+    "impact_scope": "local",
+    "feedback_latency": "immediate",
+    "expected_consequence": "Recover terminal payment status without creating another payment mutation.",
+    "uncertainty": "low"
+  },
+  "cooperation": {
+    "participants": [
+      {
+        "name": "requesting-system",
+        "goal": "Complete exactly one intended payment safely",
+        "risk": "Duplicate effect if a fresh mutation is issued prematurely"
+      },
+      {
+        "name": "payment-state-source",
+        "goal": "Report authoritative status for the original operation identity",
+        "risk": "Status can be stale or temporarily unavailable"
+      }
+    ],
+    "shared_upside": "Correct recovery without duplicate financial effects",
+    "defection_risk": "low",
+    "stability": "stable",
+    "recommendation": "commit"
+  },
+  "action": {
+    "summary": "Recover authoritative payment status using the original operation identity before any new payment mutation.",
+    "review_after": "immediately after authoritative lookup",
+    "owner": "requesting-system"
+  },
+  "review": {
+    "summary": "Authoritative lookup found the existing payment effect; no new payment mutation was issued.",
+    "actual_consequence": "The existing effect was accepted and duplicate-effect exposure was closed for this provider-neutral case.",
+    "evidence": [
+      "evidence:authoritative_lookup:status=committed",
+      "evidence:mutation_count:new_payment=0"
+    ],
+    "next_state": "PAYMENT_SUCCESS_CONFIRMED"
+  }
+}
